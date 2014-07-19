@@ -1,0 +1,30 @@
+{
+	"name": "package-quality",
+	"version": "0.0.1",
+	"description": "Estimate the quality of a package.",
+	"homepage": "https://github.com/alexfernandez/package-quality",
+	"contributors": ["Alex Fernández <alexfernandeznpm@gmail.com>"],
+	"license": "MIT",
+	"main": "index.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/alexfernandez/package-quality"
+	},
+	"dependencies": {
+		"prototypes": "*",
+		"request": "*",
+		"testing": "*"
+	},
+	"keywords" : ["package", "quality", "measurement", "package quality", "estimation", "npm", "registry", "npm registry"],
+	"engines": {
+		"node": "*"
+	},
+	"bin": {
+		"estimate": "bin/package.js"
+	},
+	"preferGlobal": true,
+	"scripts": {
+		"test": "node test.js"
+	},
+	"private": false
+}
