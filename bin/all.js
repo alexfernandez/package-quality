@@ -7,12 +7,12 @@
  */
 
 // requires
-var estimation = require('./estimation.js');
+var estimation = require('../lib/estimation.js');
 var async = require('async');
 var Log = require('log');
 
 // globals
-var log = new Log('debug');
+var log = new Log('info');
 
 
 /**
@@ -41,14 +41,26 @@ exports.goOver = function(callback)
 		{
 			return callback(error);
 		}
-		var total = 0;
-		var quality = 0;
+		var result = {
+			packages: 0,
+			quality: 0,
+			zeros: 0,
+		};
 		for (var key in results)
 		{
-			quality += results[key];
-			total += 1;
+			result.packages += 1;
+			var quality = results[key];
+			if (!quality)
+			{
+				result.zeros += 1;
+			}
+			else
+			{
+				result.quality += quality;
+			}
 		}
-		return callback(null, total, quality / total);
+		result.averageQuality = result.quality / result.packages;
+		return callback(null, result);
 	});
 };
 
@@ -63,13 +75,13 @@ function getEstimator(name)
 // run tests if invoked directly
 if (__filename == process.argv[1])
 {
-	exports.goOver(function(error, total, quality)
+	exports.goOver(function(error, result)
 	{
 		if (error)
 		{
 			return console.error('Could not evaluate all: %s', error);
 		}
-		console.log('Average quality for %s packages: %s', total, quality);
+		console.log('Result: %s', JSON.stringify(result, null, '\t'));
 	});
 }
 
