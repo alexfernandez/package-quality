@@ -12,7 +12,7 @@ var async = require('async');
 var Log = require('log');
 
 // globals
-var log = new Log('info');
+var log = new Log('debug');
 
 
 /**
@@ -32,8 +32,9 @@ exports.goOver = function(callback)
 	var tasks = {};
 	for (var name in all)
 	{
-		log.debug('Going over package: %s', name);
-		tasks[name] = getEstimator(name);
+		var entry = all[name];
+		log.debug('Going over package %s: %s', name, JSON.stringify(entry, null, '\t'));
+		tasks[name] = getEstimator(entry);
 	}
 	async.series(tasks, function(error, results)
 	{
@@ -64,11 +65,11 @@ exports.goOver = function(callback)
 	});
 };
 
-function getEstimator(name)
+function getEstimator(entry)
 {
 	return function(callback)
 	{
-		return estimation.estimate(name, callback);
+		return estimation.estimate(entry, callback);
 	};
 }
 
