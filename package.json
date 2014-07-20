@@ -12,7 +12,8 @@
 	},
 	"dependencies": {
 		"prototypes": "*",
-		"request": "*",
+		"basic-request": "*",
+		"log": "*",
 		"testing": "*"
 	},
 	"keywords" : ["package", "quality", "measurement", "package quality", "estimation", "npm", "registry", "npm registry"],
