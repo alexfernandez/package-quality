@@ -12,7 +12,7 @@ var async = require('async');
 var Log = require('log');
 
 // globals
-var log = new Log('debug');
+var log = new Log('info');
 
 
 /**
