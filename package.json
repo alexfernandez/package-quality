@@ -14,6 +14,7 @@
 		"prototypes": "*",
 		"basic-request": "*",
 		"log": "*",
+		"async": "*",
 		"testing": "*"
 	},
 	"keywords" : ["package", "quality", "measurement", "package quality", "estimation", "npm", "registry", "npm registry"],
@@ -21,7 +22,7 @@
 		"node": "*"
 	},
 	"bin": {
-		"estimate": "bin/package.js"
+		"all": "bin/all.js"
 	},
 	"preferGlobal": true,
 	"scripts": {
