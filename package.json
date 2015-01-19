@@ -15,7 +15,8 @@
 		"basic-request": "*",
 		"log": "*",
 		"async": "*",
-		"testing": "*"
+		"testing": "*",
+		"moment": "*"
 	},
 	"keywords" : ["package", "quality", "measurement", "package quality", "estimation", "npm", "registry", "npm registry"],
 	"engines": {
