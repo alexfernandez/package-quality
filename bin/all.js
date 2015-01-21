@@ -26,7 +26,7 @@ exports.goOver = function(callback)
 	log.debug('loading all.json...');
 	try
 	{
-		all = require('../some.json');
+		all = require('../all.json');
 	}
 	catch(exception)
 	{
@@ -39,9 +39,12 @@ exports.goOver = function(callback)
 	for (var i=0; i<limit; i++)
 	{
 		var name = names[i];
-		var entry = all[name];
-		log.debug('Going over package %s: %s', name, JSON.stringify(entry, null, '\t'));
-		tasks[name] = getEstimator(entry);
+		if (name != "_updated")
+		{
+			var entry = all[name];
+			log.debug('Going over package %s: %s', name, JSON.stringify(entry, null, '\t'));
+			tasks[name] = getEstimator(entry);
+		}
 	}
 	async.series(tasks, function(error, results)
 	{

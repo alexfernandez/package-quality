@@ -1,0 +1,19 @@
+{
+    "name":"loadtest",
+    "description":"Run load tests for your web application. Mostly ab-compatible interface, with an option to force requests per second. Includes an API for automated load testing.",
+    "dist-tags":{"latest":"1.2.6"},
+    "maintainers":[{"name":"alexfernandez","email":"alexfernandeznpm@gmail.com"}],
+    "repository":{
+        "type":"git",
+        "url":"https://github.com/alexfernandez/loadtest"
+        },
+    "readmeFilename":"README.md",
+    "homepage":"https://github.com/alexfernandez/loadtest",
+    "keywords":["testing","test","load test","load testing","http","performance","black box"],
+    "contributors":[{"name":"Alex Fernández","email":"alexfernandeznpm@gmail.com"}],
+    "bugs":{"url":"https://github.com/alexfernandez/loadtest/issues"},
+    "license":"MIT",
+    "users":{"capablemonkey":true,"kikobeats":true,"nebulon":true,"hellboy81":true,"deadlink":true,"acjohnso25":true,"vdsabev":true,"fdezromero":true},
+    "time":{"modified":"2015-01-16T00:32:59.797Z"},
+    "versions":{"1.2.6":"latest"}
+}
