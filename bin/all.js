@@ -9,8 +9,6 @@
 // requires
 var config = require('../config.js');
 var estimation = require('../lib/estimation.js');
-var request = require('basic-request');
-var fs = require('fs');
 var async = require('async');
 var Log = require('log');
 
@@ -39,7 +37,7 @@ exports.goOver = function(callback)
 	for (var i=0; i<limit; i++)
 	{
 		var name = names[i];
-		if (name != "_updated")
+		if (name != '_updated')
 		{
 			var entry = all[name];
 			log.debug('Going over package %s: %s', name, JSON.stringify(entry, null, '\t'));

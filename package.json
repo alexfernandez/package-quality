@@ -12,7 +12,7 @@
 	},
 	"dependencies": {
 		"prototypes": "*",
-		"basic-request": "*",
+		"request": "*",
 		"log": "*",
 		"async": "*",
 		"testing": "*",
