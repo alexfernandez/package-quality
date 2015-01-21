@@ -6,3 +6,4 @@
  */
 
  exports.logLevel = 'debug';
+ exports.limit = 100;

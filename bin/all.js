@@ -34,7 +34,7 @@ exports.goOver = function(callback)
 	}
 	log.debug('all.json loaded');
 	var names = Object.keys(all);
-	var limit = names.length < 10 ? names.length : 10;
+	var limit = names.length < config.limit ? names.length : config.limit;
 	var tasks = {};
 	for (var i=0; i<limit; i++)
 	{
