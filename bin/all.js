@@ -26,7 +26,7 @@ exports.goOver = function(callback)
 	log.debug('loading all.json...');
 	try
 	{
-		all = require('../all.json');
+		all = require('../some.json');
 	}
 	catch(exception)
 	{
@@ -34,7 +34,7 @@ exports.goOver = function(callback)
 	}
 	log.debug('all.json loaded');
 	var names = Object.keys(all);
-	var limit = names.length < config.limit ? names.length : config.limit;
+	var limit = (config.limit === null) || (names.length < config.limit) ? names.length : config.limit;
 	var tasks = {};
 	for (var i=0; i<limit; i++)
 	{
