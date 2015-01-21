@@ -7,6 +7,7 @@
  */
 
 // requires
+var config = require('../config.js');
 var estimation = require('../lib/estimation.js');
 var request = require('basic-request');
 var fs = require('fs');
@@ -14,60 +15,7 @@ var async = require('async');
 var Log = require('log');
 
 // globals
-var log = new Log('info');
-
-/**
- * Read all available npm packages and save them in ../all.json.
- */
-exports.readAll = function(callback) {
-	var url = 'https://skimdb.npmjs.com/registry/_all_docs';
-	log.debug('Requesting package list from: ' + url);
-	request.get(url, function(error, body)
-	{
-		if (error)
-		{
-			if (body.statusCode == 404)
-			{
-				return callback(null, 0);
-			}
-			log.error('Could not read skimdb registry');
-			return callback(null, 0);
-		}
-		log.debug('Response received. Parsing.');
-		var all = [];
-		try
-		{
-			JSON.parse(body, function(key, value)
-				{
-					if (key == 'id')
-					{
-						all.push(value);
-					}
-				});
-		}
-		catch(exception)
-		{
-			return callback('Could not parse skimdb response: ' + exception);
-		}
-		log.debug('Parsing complete. Saving.');
-		fs.open('../all.json', 'w', function(error, file)
-		{
-			if (error)
-			{
-				return callback('Could not open all.json file: ' + error);
-			}
-			fs.write(file, JSON.stringify(all), function(error)
-			{
-				if (error)
-				{
-					return callback('Could not write all.json file: ' + error);
-				}
-				log.debug('File saved.');
-				return callback(null, all.length);
-			});
-		});
-	});
-};
+var log = new Log(config.logLevel);
 
 /**
  * Estimate the quality of a package between 0 and 1.
@@ -75,6 +23,7 @@ exports.readAll = function(callback) {
 exports.goOver = function(callback)
 {
 	var all;
+	log.debug('loading all.json...');
 	try
 	{
 		all = require('../all.json');
@@ -83,9 +32,13 @@ exports.goOver = function(callback)
 	{
 		return callback('Could not parse all.json: ' + exception);
 	}
+	log.debug('all.json loaded');
+	var names = Object.keys(all);
+	var limit = names.length < 10 ? names.length : 10;
 	var tasks = {};
-	for (var name in all)
+	for (var i=0; i<limit; i++)
 	{
+		var name = names[i];
 		var entry = all[name];
 		log.debug('Going over package %s: %s', name, JSON.stringify(entry, null, '\t'));
 		tasks[name] = getEstimator(entry);
