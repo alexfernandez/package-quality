@@ -5,5 +5,7 @@
  * (C) 2015 Diego Lafuente.
  */
 
- exports.logLevel = 'debug';
- exports.limit = 100;
+exports.logLevel = 'debug';
+exports.limit = 100;
+exports.mongoConnection = "mongodb://localhost/quality?autoReconnect=true&connectTimeoutMS=5000";
+exports.testMongoConnection = "mongodb://localhost/qualitytest?autoReconnect=true&connectTimeoutMS=5000";
