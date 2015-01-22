@@ -8,6 +8,7 @@
 
 // requires
 var config = require('../config.js');
+var db = require('../lib/db.js');
 var estimation = require('../lib/estimation.js');
 var async = require('async');
 var Log = require('log');
@@ -16,10 +17,14 @@ var Log = require('log');
 var log = new Log(config.logLevel);
 
 /**
- * Estimate the quality of a package between 0 and 1.
+ * Go over all the packages in all.json and update mongo.
+ * There are two constraints:
+ *   - Github only allows 5000 requests per hour.
+ *   - We should use config.limit to avoid RangeErrors in the stack size
  */
 exports.goOver = function(callback)
 {
+	var packagesCollection;
 	var all;
 	log.debug('loading all.json...');
 	try
@@ -31,45 +36,31 @@ exports.goOver = function(callback)
 		return callback('Could not parse all.json: ' + exception);
 	}
 	log.debug('all.json loaded');
-	var names = Object.keys(all);
-	var limit = (config.limit === null) || (names.length < config.limit) ? names.length : config.limit;
-	var tasks = {};
-	for (var i=0; i<limit; i++)
+	var numberOfPackages = Object.keys(all).length;
+	var limit = (config.limit === null) || (numberOfPackages < config.limit) ? numberOfPackages : config.limit;
+	var chunks = [];
+	for (var i = 0; i < Math.ceil(numberOfPackages/limit); i++)
 	{
-		var name = names[i];
+		chunks.push([]);
+	}
+	var packageCount = 0;
+	for (var name in all)
+	{
 		if (name != '_updated')
 		{
 			var entry = all[name];
 			log.debug('Going over package %s: %s', name, JSON.stringify(entry, null, '\t'));
-			tasks[name] = getEstimator(entry);
+			chunks[Math.floor(packageCount/limit)].push(getEstimator(entry));
+			packageCount++;
 		}
 	}
-	async.series(tasks, function(error, results)
-	{
-		if (error)
-		{
-			return callback(error);
-		}
-		var result = {
-			packages: 0,
-			quality: 0,
-			zeros: 0,
-		};
-		for (var key in results)
-		{
-			result.packages += 1;
-			var quality = results[key];
-			if (!quality)
-			{
-				result.zeros += 1;
-			}
-			else
-			{
-				result.quality += quality;
-			}
-		}
-		result.averageQuality = result.quality / result.packages;
-		return callback(null, result);
+	log.debug('number of chunks: ' + chunks.length);
+	db.addCallback(function(error, result) {
+        if (error) {
+            return callback(error);
+        }
+        packagesCollection = result.collection('packages');
+		callback(null, chunks.length);
 	});
 };
 
@@ -81,27 +72,24 @@ function getEstimator(entry)
 	};
 }
 
-// run tests if invoked directly
+// run script if invoked directly
 if (__filename == process.argv[1])
 {
-	if (process.argv.length > 2 && process.argv[2] === 'read_all')
-	{
-		exports.readAll(function(error, result)
-		{
-			if (error)
-			{
-				return log.error('Could not read all: %s', error);
-			}
-			log.info('all.json file created. Number of entries: ' + result);
-		});
-	}
 	exports.goOver(function(error, result)
 	{
 		if (error)
 		{
-			return log.error('Could not evaluate all: %s', error);
+			log.error('Could not evaluate all: %s', error);
+			return db.close(function () {
+				log.info('DB closed');
+				process.exit(1);
+			});
 		}
 		log.info('Result: %s', JSON.stringify(result, null, '\t'));
+		db.close(function () {
+			log.info('DB closed');
+			process.exit(0);
+		});
 	});
 }
 
