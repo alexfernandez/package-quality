@@ -69,7 +69,7 @@ exports.goOver = function(callback)
             return callback(error);
         }
         startTime = moment();
-        packagesCollection = result.collection('packages');
+        packagesCollection = result.collection(config.packagesCollection);
         var series = [];
         chunks.forEach(function(chunk)
 		{

@@ -17,7 +17,8 @@
 		"async": "*",
 		"testing": "*",
 		"mongodb": "*",
-		"moment": "*"
+		"moment": "*",
+		"express": "*"
 	},
 	"keywords" : ["package", "quality", "measurement", "package quality", "estimation", "npm", "registry", "npm registry"],
 	"engines": {
