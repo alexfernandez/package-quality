@@ -52,7 +52,7 @@ exports.goOver = function(offset, callback)
 	if (offset)
 	{
 		log.info('Offset ' + offset);
-		for (var i=0; i<offset, i++)
+		for (var i=0; i<offset; i++)
 		{
 			delete all[names.shift()];
 		}
