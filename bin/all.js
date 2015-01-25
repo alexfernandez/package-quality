@@ -120,7 +120,7 @@ function getEstimator(entry)
 			{
 				if (error)
 				{
-					log.error('Package ' + result.name + 'could not be upserted in the database: ' + JSON.stringify(error));
+					log.error('Package ' + result.name + ' could not be upserted in the database: ' + JSON.stringify(error));
 				}
 				callback(null);
 			});
