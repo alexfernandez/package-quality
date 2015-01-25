@@ -30,8 +30,12 @@ var MILLISECONDS_IN_AN_HOUR = 3600000;
  *   - Github only allows 5000 requests per hour.
  *   - We should use config.limit to avoid RangeErrors in the stack size
  */
-exports.goOver = function(callback)
+exports.goOver = function(offset, callback)
 {
+	if (typeof offset === 'function') {
+		callback = offset;
+		offset = 0;
+	}
 	var all;
 	log.info('loading all.json...');
 	try
@@ -43,7 +47,19 @@ exports.goOver = function(callback)
 		return callback('Could not parse all.json: ' + exception);
 	}
 	log.info('all.json loaded');
-	var numberOfPackages = Object.keys(all).length;
+	var names = Object.keys(all)
+	log.info('All packages: ' + names.length);
+	if (offset)
+	{
+		log.info('Offset ' + offset);
+		for (var i=0; i<offset, i++)
+		{
+			delete all[names.shift()];
+		}
+	}
+	names = Object.keys(all);
+	var numberOfPackages = names.length;
+	log.info('All packages after offset: ' + numberOfPackages);
 	limit = (limit == null) || (numberOfPackages < limit) ? numberOfPackages : limit;
 	var chunks = [];
 	for (var i = 0; i < Math.ceil(numberOfPackages/limit); i++)
@@ -156,7 +172,8 @@ function getChunkProcessor(chunk)
 // run script if invoked directly
 if (__filename == process.argv[1])
 {
-	exports.goOver(function(error, result)
+	var offset = process.argv[2];
+	exports.goOver(offset, function(error, result)
 	{
 		if (error)
 		{
