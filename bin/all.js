@@ -75,7 +75,7 @@ exports.goOver = function(offset, callback)
 		chunks[index].push(getEstimator(entry));
 		packageCount++;
 	}
-	delete all;
+	all = undefined;
 	log.debug('number of chunks: ' + chunks.length);
 	db.addCallback(function(error, result)
 	{
