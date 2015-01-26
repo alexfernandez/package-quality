@@ -16,13 +16,10 @@ var Log = require('log');
 
 // globals
 var log = new Log(config.logLevel);
-var githubApiCalls = 0;
+var githubApiRemainingCalls;
+var githubApiResetLimit;
 var limit = config.limit;
-var startTime;
 var packagesCollection;
-
-// constants
-var MILLISECONDS_IN_AN_HOUR = 3600000;
 
 /**
  * Go over all the packages in all.json and update mongo.
@@ -82,7 +79,6 @@ exports.goOver = function(offset, callback)
         if (error) {
             return callback(error);
         }
-        startTime = moment();
         packagesCollection = result.collection(config.packagesCollection);
         var series = [];
         while (chunks.length)
@@ -110,9 +106,14 @@ function getEstimator(entry)
 			{
 				callback(error);
 			}
-			if (result.githubApiCalled)
+			if (result.githubApiRemainingCalls && result.githubApiResetLimit)
 			{
-				githubApiCalls++;
+				githubApiRemainingCalls = result.githubApiRemainingCalls;
+				githubApiResetLimit = result.githubApiResetLimit;
+				log.debug('githubApiRemainingCalls: ' + githubApiRemainingCalls);
+				log.debug('githubApiResetLimit: ' + githubApiResetLimit);
+				delete result.githubApiRemainingCalls;
+				delete result.githubApiResetLimit;
 			}
 			packagesCollection.update({name: result.name}, {'$set':result}, {upsert: true}, function(error)
 			{
@@ -138,24 +139,21 @@ function getChunkProcessor(chunk)
 				return callback(error);
 			}
 			log.info('Chunk processed.');
-			// check elapsed time and api calls.
-			if (githubApiCalls + limit > config.maxGithubApiCallsPerHour)
+			// check remaining api calls.
+			if (githubApiRemainingCalls < limit)
 			{
-				var now = moment();
-				var elapsed = now.diff(startTime, 'milliseconds');
-				githubApiCalls = 0;
-				if (elapsed < MILLISECONDS_IN_AN_HOUR)
+				var now = moment().unix();
+				if (githubApiResetLimit > now)
 				{
-					log.info('Waiting ' + (MILLISECONDS_IN_AN_HOUR - elapsed) + ' milliseconds until next chunk');
+					var millisecondsToWait = (githubApiResetLimit - now) * 1000;
+					log.info('Waiting ' + millisecondsToWait + ' milliseconds until next chunk');
 					setTimeout(function()
 					{
-						startTime = moment();
 						return callback(null);
-					}, MILLISECONDS_IN_AN_HOUR - elapsed);
+					}, millisecondsToWait);
 				}
 				else
 				{
-					startTime = moment();
 					return callback(null);
 				}
 			}
