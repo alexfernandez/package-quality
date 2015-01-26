@@ -41,6 +41,7 @@ exports.goOver = function(offset, callback)
 	try
 	{
 		all = require('../all.json');
+		delete all._updated;
 	}
 	catch(exception)
 	{
@@ -57,7 +58,6 @@ exports.goOver = function(offset, callback)
 			delete all[names.shift()];
 		}
 	}
-	names = Object.keys(all);
 	var numberOfPackages = names.length;
 	log.info('All packages after offset: ' + numberOfPackages);
 	limit = (limit == null) || (numberOfPackages < limit) ? numberOfPackages : limit;
@@ -69,15 +69,13 @@ exports.goOver = function(offset, callback)
 	var packageCount = 0;
 	for (var name in all)
 	{
-		if (name != '_updated')
-		{
-			var entry = all[name];
-			log.debug('Going over package %s: %s', name, JSON.stringify(entry, null, '\t'));
-			var index = Math.floor(packageCount/limit);
-			chunks[index].push(getEstimator(entry));
-			packageCount++;
-		}
+		var entry = all[name];
+		log.debug('Going over package %s: %s', name, JSON.stringify(entry, null, '\t'));
+		var index = Math.floor(packageCount/limit);
+		chunks[index].push(getEstimator(entry));
+		packageCount++;
 	}
+	delete all;
 	log.debug('number of chunks: ' + chunks.length);
 	db.addCallback(function(error, result)
 	{
