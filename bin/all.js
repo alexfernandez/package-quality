@@ -48,7 +48,7 @@ exports.goOver = function(offset, callback)
 		return callback('Could not parse all.json: ' + exception);
 	}
 	log.info('all.json loaded');
-	var names = Object.keys(all)
+	var names = Object.keys(all);
 	log.info('All packages: ' + names.length);
 	if (offset)
 	{
@@ -60,9 +60,9 @@ exports.goOver = function(offset, callback)
 	}
 	var numberOfPackages = names.length;
 	log.info('All packages after offset: ' + numberOfPackages);
-	limit = (limit == null) || (numberOfPackages < limit) ? numberOfPackages : limit;
+	limit = (limit === null) || (numberOfPackages < limit) ? numberOfPackages : limit;
 	var chunks = [];
-	for (var i = 0; i < Math.ceil(numberOfPackages/limit); i++)
+	for (var j = 0; j < Math.ceil(numberOfPackages/limit); j++)
 	{
 		chunks.push([]);
 	}
@@ -74,8 +74,8 @@ exports.goOver = function(offset, callback)
 		var index = Math.floor(packageCount/limit);
 		chunks[index].push(getEstimator(entry));
 		packageCount++;
+		delete all[name];
 	}
-	all = undefined;
 	log.debug('number of chunks: ' + chunks.length);
 	db.addCallback(function(error, result)
 	{
@@ -85,10 +85,10 @@ exports.goOver = function(offset, callback)
         startTime = moment();
         packagesCollection = result.collection(config.packagesCollection);
         var series = [];
-        chunks.forEach(function(chunk)
+        while (chunks.length)
 		{
-			series.push(getChunkProcessor(chunk));
-		});
+			series.push(getChunkProcessor(chunks.shift()));
+		}
 		async.series(series, function(error)
 		{
 			if (error)
