@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * Serve que quality of a required package.
+ * Serve que quality of a required package using mongodb
  * (C) 2015 Diego Lafuente.
  */
 
@@ -41,11 +41,11 @@ exports.startServer = function(port, callback) {
 
 exports.stopServer = function(callback) {
 	if (!server) {
-		log.info("No server to close");
+		log.info('No server to close');
 		return callback(null);
 	}
 	server.close(function() {
-		log.info("Server closed");
+		log.info('Server closed');
 		callback(null);
 	});
 };
@@ -56,7 +56,7 @@ function serve (request, response) {
 		if (error || !result) {
 			return response.status(403).send({error: 'package ' + npmPackage + ' not found.'});
 		}
-		response.jsonp(result);
+		return response.jsonp(result);
 	});
 }
 
