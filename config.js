@@ -6,7 +6,7 @@
  */
 
 exports.logLevel = 'info';
-exports.limit = 35;
+exports.limit = 100;
 exports.expressPort = 80;
 exports.packagesCollection = 'packages';
 exports.mongoConnection = 'mongodb://localhost/quality?autoReconnect=true&connectTimeoutMS=5000';
