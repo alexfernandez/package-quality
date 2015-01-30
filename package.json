@@ -12,11 +12,13 @@
 	},
 	"dependencies": {
 		"prototypes": "*",
-		"basic-request": "*",
+		"request": "*",
 		"log": "*",
 		"async": "*",
 		"testing": "*",
-		"moment": "*"
+		"mongodb": "*",
+		"moment": "*",
+		"express": "*"
 	},
 	"keywords" : ["package", "quality", "measurement", "package quality", "estimation", "npm", "registry", "npm registry"],
 	"engines": {

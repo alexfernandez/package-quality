@@ -1,15 +1,14 @@
 'use strict';
 
 /**
- * Export everything.
+ * Starts the server.
  * (C) 2014 Alex Fernández.
  */
 
 
 // requires
-var estimation = require('./lib/estimation.js');
+var app = process.argv[2] === "no_mongo" ? require('./bin/app_no_mongo.js') : require('./bin/app.js');
 
-// exports
-exports.estimate = estimation.estimate;
+app.startServer(function(){});
 
 
