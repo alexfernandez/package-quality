@@ -26,4 +26,5 @@ node_modules
 
 all.json
 *.swp
+connect.sh
 
