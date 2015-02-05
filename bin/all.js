@@ -102,7 +102,7 @@ function getEstimator(entry)
 	{
 		estimation.estimate(entry, function(error, result)
 		{
-			if (error)
+			if (error || !result)
 			{
 				callback(error);
 			}
@@ -112,9 +112,9 @@ function getEstimator(entry)
 				githubApiResetLimit = result.githubApiResetLimit;
 				log.debug('githubApiRemainingCalls: ' + githubApiRemainingCalls);
 				log.debug('githubApiResetLimit: ' + githubApiResetLimit);
-				delete result.githubApiRemainingCalls;
-				delete result.githubApiResetLimit;
 			}
+			delete result.githubApiRemainingCalls;
+			delete result.githubApiResetLimit;
 			packagesCollection.update({name: result.name}, {'$set':result}, {upsert: true}, function(error)
 			{
 				if (error)
