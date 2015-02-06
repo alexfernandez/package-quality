@@ -134,6 +134,14 @@ function getEstimator(entry)
                 {
                     delete result.created;
                     result.timesUpdated = item.timesUpdated + 1;
+                    // should we defer the update one year
+                    var created = moment(item.created);
+                    var lastUpdated = moment(result.lastUpdated);
+                    var monthsAgo = lastUpdated.diff(created, 'months');
+                    if ((monthsAgo > 11) && (result.timesUpdated <= (monthsAgo + 1)))
+                    {
+                        result.nextUpdate = moment(lastUpdated).add(1, 'years');
+                    }
                 }
                 packagesCollection.update({name: result.name}, {'$set':result}, {upsert: true}, function(error)
                 {
@@ -192,14 +200,17 @@ function getChunkProcessor(chunk)
 function testUpdateNewEntry(callback)
 {
     var newEntry = {name: 'newEntry'};
-    var now = moment();
+    var now = moment().format();
+    var nextUpdate = moment(now).add(1, 'month').format();
     // stubs
     estimation = {
         estimate: function(entry, internalCallback) {
             testing.assertEquals(entry.name, newEntry.name, 'wrong entry passed to estimate', callback);
             return internalCallback(null, {
                 name: entry.name,
-                created: now
+                created: now,
+                nextUpdate: nextUpdate,
+                timesUpdated: 0
             });
         }
     };
@@ -211,7 +222,9 @@ function testUpdateNewEntry(callback)
         update: function(query, update, options, internalCallback) {
             testing.assertEquals(query.name, newEntry.name, 'wrong name passed to update in query', callback);
             testing.assertEquals(update.$set.name, newEntry.name, 'wrong name passed to update in set', callback);
-            testing.assertEquals(update.$set.created.diff(now), 0, 'wrong created time passed to update in set', callback);
+            testing.assertEquals(moment(update.$set.created).diff(now), 0, 'wrong created time passed to update in set', callback);
+            testing.assertEquals(moment(update.$set.nextUpdate).diff(nextUpdate), 0, 'wrong nextUpdate time passed to update in set', callback);
+            testing.assertEquals(update.$set.timesUpdated, 0, 'wrong timesUpdated passed to update in set', callback);
             return internalCallback(null);
         }
     };
@@ -225,14 +238,17 @@ function testUpdateNewEntry(callback)
 function testUpdateExistingEntryShouldUpdate(callback)
 {
     var existingEntry = {name: 'existingEntry'};
-    var now = moment();
+    var now = moment().format();
+    var nextUpdate = moment(now).add(1, 'month').format();
     // stubs
     estimation = {
         estimate: function(entry, internalCallback) {
             testing.assertEquals(entry.name, existingEntry.name, 'wrong entry passed to estimate', callback);
             return internalCallback(null, {
                 name: entry.name,
-                created: now
+                created: now,
+                nextUpdate: nextUpdate,
+                timesUpdated: 0
             });
         }
     };
@@ -242,11 +258,58 @@ function testUpdateExistingEntryShouldUpdate(callback)
             return internalCallback(null, {
                 name: query.name,
                 nextUpdate: moment(now).subtract(1, 'second').format(),
+                timesUpdated: 7
             });
         },
         update: function(query, update, options, internalCallback) {
             testing.assertEquals(query.name, existingEntry.name, 'wrong name passed to update in query', callback);
             testing.assertEquals(update.$set.name, existingEntry.name, 'wrong name passed to update in set', callback);
+            testing.assertEquals(moment(update.$set.nextUpdate).diff(nextUpdate), 0, 'wrong nextUpdate time passed to update in set', callback);
+            testing.assertEquals(update.$set.timesUpdated, 8, 'wrong timesUpdated passed to update in set', callback);
+            testing.check(update.$set.created, 'created should not be passed to update in set', callback);
+            return internalCallback(null);
+        }
+    };
+    var estimator = getEstimator(existingEntry);
+    estimator(function(error) {
+        testing.check(error, callback);
+        testing.success(callback);
+    });
+}
+
+function testUpdateExistingEntryShouldUpdateAndDefer(callback)
+{
+    var existingEntry = {name: 'existingEntry'};
+    var now = moment().format();
+    var nextUpdate = moment(now).add(1, 'month').format();
+    // stubs
+    estimation = {
+        estimate: function(entry, internalCallback) {
+            testing.assertEquals(entry.name, existingEntry.name, 'wrong entry passed to estimate', callback);
+            return internalCallback(null, {
+                name: entry.name,
+                created: now,
+                lastUpdated: now,
+                nextUpdate: nextUpdate,
+                timesUpdated: 0
+            });
+        }
+    };
+    packagesCollection = {
+        findOne: function(query, internalCallback) {
+            testing.assertEquals(query.name, existingEntry.name, 'wrong name passed to findOne', callback);
+            return internalCallback(null, {
+                name: query.name,
+                created: moment(now).subtract(12, 'months').format(),
+                nextUpdate: moment(now).subtract(1, 'second').format(),
+                timesUpdated: 12
+            });
+        },
+        update: function(query, update, options, internalCallback) {
+            testing.assertEquals(query.name, existingEntry.name, 'wrong name passed to update in query', callback);
+            testing.assertEquals(update.$set.name, existingEntry.name, 'wrong name passed to update in set', callback);
+            testing.assertEquals(moment(update.$set.nextUpdate).diff(now, 'years'), 1, 'wrong nextUpdate time passed to update in set', callback);
+            testing.assertEquals(update.$set.timesUpdated, 13, 'wrong timesUpdated passed to update in set', callback);
             testing.check(update.$set.created, 'created should not be passed to update in set', callback);
             return internalCallback(null);
         }
@@ -295,6 +358,7 @@ exports.test = function(callback)
     testing.run([
         testUpdateNewEntry,
         testUpdateExistingEntryShouldUpdate,
+        testUpdateExistingEntryShouldUpdateAndDefer,
         testUpdateExistingEntryShouldNotUpdate
     ], function() {
         db.close(function(error) {
