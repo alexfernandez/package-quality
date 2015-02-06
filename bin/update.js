@@ -222,6 +222,71 @@ function testUpdateNewEntry(callback)
     });
 }
 
+function testUpdateExistingEntryShouldUpdate(callback)
+{
+    var existingEntry = {name: 'existingEntry'};
+    var now = moment();
+    // stubs
+    estimation = {
+        estimate: function(entry, internalCallback) {
+            testing.assertEquals(entry.name, existingEntry.name, 'wrong entry passed to estimate', callback);
+            return internalCallback(null, {
+                name: entry.name,
+                created: now
+            });
+        }
+    };
+    packagesCollection = {
+        findOne: function(query, internalCallback) {
+            testing.assertEquals(query.name, existingEntry.name, 'wrong name passed to findOne', callback);
+            return internalCallback(null, {
+                name: query.name,
+                nextUpdate: moment(now).subtract(1, 'second').format(),
+            });
+        },
+        update: function(query, update, options, internalCallback) {
+            testing.assertEquals(query.name, existingEntry.name, 'wrong name passed to update in query', callback);
+            testing.assertEquals(update.$set.name, existingEntry.name, 'wrong name passed to update in set', callback);
+            testing.check(update.$set.created, 'created should not be passed to update in set', callback);
+            return internalCallback(null);
+        }
+    };
+    var estimator = getEstimator(existingEntry);
+    estimator(function(error) {
+        testing.check(error, callback);
+        testing.success(callback);
+    });
+}
+
+function testUpdateExistingEntryShouldNotUpdate(callback)
+{
+    var existingEntry = {name: 'existingEntry'};
+    var now = moment();
+    // stubs
+    estimation = {
+        estimate: function() {
+            testing.check(true, 'estimate should never be called', callback);
+        }
+    };
+    packagesCollection = {
+        findOne: function(query, internalCallback) {
+            testing.assertEquals(query.name, existingEntry.name, 'wrong name passed to findOne', callback);
+            return internalCallback(null, {
+                name: query.name,
+                nextUpdate: moment(now).add(1, 'second').format(),
+            });
+        },
+        update: function() {
+            testing.check(true, 'update should never be called', callback);
+        }
+    };
+    var estimator = getEstimator(existingEntry);
+    estimator(function(error) {
+        testing.check(error, callback);
+        testing.success(callback);
+    });
+}
+
 /**
  * Run all tests.
  */
@@ -229,6 +294,8 @@ exports.test = function(callback)
 {
     testing.run([
         testUpdateNewEntry,
+        testUpdateExistingEntryShouldUpdate,
+        testUpdateExistingEntryShouldNotUpdate
     ], function() {
         db.close(function(error) {
             callback(error);
