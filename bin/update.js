@@ -12,6 +12,7 @@ var db = require('../lib/db.js');
 var estimation = require('../lib/estimation.js');
 var async = require('async');
 var moment = require('moment');
+var testing = require('testing');
 var Log = require('log');
 
 // globals
@@ -103,12 +104,12 @@ function getEstimator(entry)
         var name = entry.name;
         var now = moment();
         // check if the package is in the database
-        packagesCollection.findOne({name: name}, function(error, item) 
+        packagesCollection.findOne({name: name}, function(error, item)
         {
             var isNewEntry = error || !item;
             var shouldUpdate = isNewEntry || (moment(item.nextUpdate) < now);
             // return if we should not update
-            if (!shouldUpdate) 
+            if (!shouldUpdate)
             {
                 return callback(null);
             }
@@ -129,7 +130,7 @@ function getEstimator(entry)
                 delete result.githubApiRemainingCalls;
                 delete result.githubApiResetLimit;
                 // new entry?
-                if (!isNewEntry) 
+                if (!isNewEntry)
                 {
                     delete result.created;
                     result.timesUpdated = item.timesUpdated + 1;
@@ -184,6 +185,56 @@ function getChunkProcessor(chunk)
         });
     };
 }
+
+/**
+ * Unit tests.
+ */
+function testUpdateNewEntry(callback)
+{
+    var newEntry = {name: 'newEntry'};
+    var now = moment();
+    // stubs
+    estimation = {
+        estimate: function(entry, internalCallback) {
+            testing.assertEquals(entry.name, newEntry.name, 'wrong entry passed to estimate', callback);
+            return internalCallback(null, {
+                name: entry.name,
+                created: now
+            });
+        }
+    };
+    packagesCollection = {
+        findOne: function(query, internalCallback) {
+            testing.assertEquals(query.name, newEntry.name, 'wrong name passed to findOne', callback);
+            return internalCallback(true);
+        },
+        update: function(query, update, options, internalCallback) {
+            testing.assertEquals(query.name, newEntry.name, 'wrong name passed to update in query', callback);
+            testing.assertEquals(update.$set.name, newEntry.name, 'wrong name passed to update in set', callback);
+            testing.assertEquals(update.$set.created.diff(now), 0, 'wrong created time passed to update in set', callback);
+            return internalCallback(null);
+        }
+    };
+    var estimator = getEstimator(newEntry);
+    estimator(function(error) {
+        testing.check(error, callback);
+        testing.success(callback);
+    });
+}
+
+/**
+ * Run all tests.
+ */
+exports.test = function(callback)
+{
+    testing.run([
+        testUpdateNewEntry,
+    ], function() {
+        db.close(function(error) {
+            callback(error);
+        });
+    });
+};
 
 // run script if invoked directly
 if (__filename == process.argv[1])
