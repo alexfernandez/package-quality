@@ -91,7 +91,7 @@ exports.goOver = function(offset, callback)
 			{
 				callback(error);
 			}
-			callback(null, chunks.length);
+			callback(null, series.length);
 		});
 	});
 };

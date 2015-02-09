@@ -92,7 +92,7 @@ exports.goOver = function(offset, callback)
             {
                 callback(error);
             }
-            callback(null, chunks.length);
+            callback(null, series.length);
         });
     });
 };
@@ -111,6 +111,7 @@ function getEstimator(entry)
             // return if we should not update
             if (!shouldUpdate)
             {
+                log.info('Discarding package: ' + name);
                 return callback(null);
             }
             // update!!
