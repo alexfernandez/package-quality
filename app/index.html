@@ -1,1 +1,58 @@
-hello world
+<!DOCTYPE html>
+<html lang="en" ng-app="StarterApp">
+	<head>
+		<meta charset="UTF-8">
+
+		<title>CodePen - Angular Material Basic App</title>
+
+		<link rel="stylesheet" href="css/style.css" media="screen" type="text/css" />
+		<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/angular_material/0.7.1/angular-material.min.css">
+	</head>
+	<body layout="column" ng-controller="AppCtrl">
+
+		<md-toolbar layout="row">
+			<button ng-click="toggleSidenav('left')" hide-gt-sm class="menuBtn">
+				<span class="visually-hidden">Menu</span>
+			</button>
+
+			<!-- <TITLE_BAR> -->
+
+			<h1>Hello World</h1>
+
+			<!-- </TITLE_BAR> -->
+
+		</md-toolbar>
+
+		<div layout="row" flex>
+			<md-sidenav layout="column" class="md-sidenav-left md-whiteframe-z2" md-component-id="left" md-is-locked-open="$media('gt-sm')">
+
+				<!-- <SIDEBAR> -->
+
+				hello
+
+				<!-- </SIDEBAR> -->
+
+			</md-sidenav>
+			<div layout="column" flex id="content">
+				<md-content layout="column" flex class="md-padding">
+
+					<!-- <CONTENT> -->
+
+					<h2>hello</h2>
+					world
+
+					<!-- </CONTENT> -->
+
+				</md-content>
+			</div>
+		</div>
+
+		<!-- Angular Material Dependencies -->
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular-animate.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular-aria.min.js"></script>
+
+		<script src="//ajax.googleapis.com/ajax/libs/angular_material/0.7.1/angular-material.min.js"></script>
+		<script src="js/main.js"></script>
+	</body>
+</html>
