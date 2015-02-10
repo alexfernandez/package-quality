@@ -30,4 +30,5 @@ node_modules
 all.json
 *.swp
 connect.sh
+local-config.js
 
