@@ -31,4 +31,4 @@ all.json
 *.swp
 connect.sh
 local-config.js
-
+.tern-port

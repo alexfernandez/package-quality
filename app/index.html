@@ -1,58 +1,62 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="StarterApp">
+<html lang="en" ng-app="PackageQuality">
+
 	<head>
-		<meta charset="UTF-8">
+		<meta charset="UTF-8"/>
+		<title>Package Quality</title>
 
-		<title>CodePen - Angular Material Basic App</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="description" content=""/>
+		<meta name="author" content=""/>
+		<link rel="icon" href="../../favicon.ico"/>
 
-		<link rel="stylesheet" href="css/style.css" media="screen" type="text/css" />
-		<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/angular_material/0.7.1/angular-material.min.css">
+		<link rel="stylesheet" href="css/style.css" media="screen" type="text/css"/>
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"/>
+		<link rel="stylesheet" href="lib/flat-ui/css/flat-ui.min.css"/>
 	</head>
-	<body layout="column" ng-controller="AppCtrl">
 
-		<md-toolbar layout="row">
-			<button ng-click="toggleSidenav('left')" hide-gt-sm class="menuBtn">
-				<span class="visually-hidden">Menu</span>
-			</button>
+	<body ng-controller="MainController">
 
-			<!-- <TITLE_BAR> -->
+		<!-- logo -->
 
-			<h1>Hello World</h1>
-
-			<!-- </TITLE_BAR> -->
-
-		</md-toolbar>
-
-		<div layout="row" flex>
-			<md-sidenav layout="column" class="md-sidenav-left md-whiteframe-z2" md-component-id="left" md-is-locked-open="$media('gt-sm')">
-
-				<!-- <SIDEBAR> -->
-
-				hello
-
-				<!-- </SIDEBAR> -->
-
-			</md-sidenav>
-			<div layout="column" flex id="content">
-				<md-content layout="column" flex class="md-padding">
-
-					<!-- <CONTENT> -->
-
-					<h2>hello</h2>
-					world
-
-					<!-- </CONTENT> -->
-
-				</md-content>
+		<div class="row">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1">
+				<img src="lib/flat-ui/img/icons/svg/clipboard.svg" alt="Package" style="display: block; margin: 1em auto"/>
 			</div>
 		</div>
 
-		<!-- Angular Material Dependencies -->
+		<!-- Search box -->
+
+		<div class="row">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1 form-group">
+				<input type="text" ng-model="query" typeahead="package for package in packages | filter:$viewValue" class="form-control" placeholder="Type to search a package"/>
+			</div>
+		</div>
+
+		<!-- Package stats -->
+
+		<div class="row" ng-if="isLoadingPackage">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1" style="text-align: center; font-size: 3em; color: gray">
+				<i class="fa fa-spinner fa-spin"></i>
+			</div>
+		</div>
+
+		<div class="row" ng-if="package">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1">
+				<h4>{{ package.name }}</h4>
+				<div class="progress" ng-repeat="metric in metrics">
+					<div class="progress-bar" style="width: {{ package[metric] * 100}}%;"></div>
+				</div>
+			</div>
+		</div>
+
 		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular-animate.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular-aria.min.js"></script>
-
-		<script src="//ajax.googleapis.com/ajax/libs/angular_material/0.7.1/angular-material.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<script src="lib/flat-ui/js/flat-ui.min.js"></script>
 		<script src="js/main.js"></script>
+		<script src="lib/angular-ui/ui-bootstrap-tpls-0.9.0.min.js"></script>
 	</body>
 </html>
