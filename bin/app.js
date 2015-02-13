@@ -7,6 +7,7 @@
  */
 
 // requires
+var path = require('path');
 var config = require('../config.js');
 var express = require('express');
 var db = require('../lib/db.js');
@@ -24,10 +25,13 @@ exports.startServer = function(port, callback) {
 		port = config.expressPort;
 	}
 	var app = express();
+	// Static files
+	app.use(express.static(path.join(__dirname, '..', 'app')));
 	// Enable JSONP
 	app.set('jsonp callback', true);
 	// GET requests
-	app.get('/:package', serve);
+	app.get('/package/:package', serve);
+	app.get('/packages', servePackagesList);
 	// connect to database
 	db.addCallback(function(error, result) {
 		if (error) {
@@ -49,6 +53,19 @@ exports.stopServer = function(callback) {
 		callback(null);
 	});
 };
+
+function servePackagesList (request, response) {
+	packagesCollection.find({}, {name: true}, function(error, result) {
+		if (error) {
+			response.send(500);
+			return;
+		}
+		var packages = (result || []).map(function (pkg) {
+			return pkg.name;
+		});
+		response.send(packages);
+	});
+}
 
 function serve (request, response) {
 	var npmPackage = request.params.package;
