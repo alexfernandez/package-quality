@@ -7,9 +7,10 @@
  */
 
 // requires
+require('prototypes');
 var config = require('../config.js');
 var express = require('express');
-var estimation = require('../lib/estimation.js');
+var estimator = require('../lib/estimation.js');
 var Log = require('log');
 
 // globals
@@ -61,12 +62,35 @@ function serve (request, response) {
     {
         return response.status(403).send({error: 'package ' + npmPackage + ' not found.'});
     }
-    estimation.estimate(entry, function(error, result)
+    estimator.estimate(entry, function(error, estimation)
     {
         if (error)
         {
             return response.status(403).send(error);
         }
-        return response.jsonp(result);
+        // remove non-factor fields
+        delete estimation.created;
+        delete estimation.githubApiRemainingCalls;
+        delete estimation.githubApiResetLimit;
+        delete estimation.lastUpdated;
+        delete estimation.name;
+        delete estimation.nextUpdate;
+        delete estimation.source;
+        delete estimation.timesUpdated;
+        // pending??
+        if (estimation.pending)
+        {
+            estimator.pending(estimation.pending, function (error, pendingEstimation)
+            {
+                delete pendingEstimation.githubApiRemainingCalls;
+                delete pendingEstimation.githubApiResetLimit;
+                delete estimation.pending;
+                return response.jsonp(estimator.addQuality(estimation.concat(pendingEstimation)));
+            });
+        }
+        else
+        {
+            return response.jsonp(estimator.addQuality(estimation));
+        }
     });
 }
