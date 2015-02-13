@@ -2,6 +2,9 @@
 
 var app = angular.module('PackageQuality', ['ui.bootstrap']);
 
+/**
+ * Packages HTTP access service
+ **/
 app.factory('packages', ['$http', function ($http) {
 	'use strict';
 
@@ -17,6 +20,9 @@ app.factory('packages', ['$http', function ($http) {
 	};
 }]);
 
+/**
+ * Filter to transform dates into "X days ago" strings
+ **/
 app.filter('timeAgo', function () {
 	'use strict';
 
@@ -47,23 +53,55 @@ app.filter('timeAgo', function () {
 		var ss = Math.floor(msec / 1000);
 		msec -= ss * 1000;
 
-		return [
+		var timeStr = [
 			((YY && (!attributes || attributes.years)) ? YY + ' years ': ''),
 			((MM && (!attributes || attributes.months)) ? MM + ' months ': ''),
 			((DD && (!attributes || attributes.days)) ? DD + ' days ': ''),
 			((hh && (!attributes || attributes.hours)) ? hh + ' hours ': ''),
 			((mm && (!attributes || attributes.minutes)) ? mm + ' minutes ' : ''),
 			((ss && (!attributes || attributes.seconds)) ? ss + ' seconds ' : '')
-		].join('') + ' ago';
+		].join('');
+		if (!timeStr) {
+			return 'today';
+		}
+		return timeStr + ' ago';
 	};
 });
 
-app.controller('MainController', ['$scope', 'packages', function($scope, packages){
+/**
+ * Main controller
+ * This handles GUI components for packages search
+ **/
+app.controller('MainController', ['$scope', '$location', 'packages', function($scope, $location, packages){
 	'use strict';
 
-	$scope.packages = []; // Add items to autocomplete
+	/**
+	 * Flags and main properties declaration
+	 **/
 	$scope.query = null;
-	$scope.package = null;
+	$scope['package'] = null;
+	$scope.DEBUG = $location.search().debug === 'true';
+
+	/**
+	 * Autocompletable packages
+	 **/
+	$scope.autocompletablePackages = ['hola', 'adios'];
+
+	/**
+	 * When location changes
+	 **/
+	$scope.$on('$locationChangeSuccess', function () {
+		console.log('Location change! Arguments:', $location.search());
+		$scope['package'] = null;
+		$scope.query = $location.search()['package'];
+		if ($scope.query) {
+			loadPackage($location.search()['package']);
+		}
+	});
+
+	/**
+	 * Available metrics
+	 **/
 	$scope.metrics = [{
 		key: 'quality',
 		label: 'Package quality'
@@ -78,26 +116,44 @@ app.controller('MainController', ['$scope', 'packages', function($scope, package
 		label: 'Versions quality'
 	}];
 
+	/**
+	 * Stars auxiliar functions
+	 **/
 	$scope.genArray = function (count) {
 		return new Array(count);
 	};
-
 	$scope.getStars = function (pack) {
 		return Math.floor(pack.quality * 5);
 	};
 
-	$scope.keyup = function (isEnter) {
+	function loadPackage(packageName) {
+		$scope['package'] = null;
+		$scope.isLoadingPackage = true;
+		packages.get(packageName, function (err, result) {
+			$scope.isLoadingPackage = false;
+			if (err) {
+				$scope['package'] = {query: packageName, notfound: true};
+				return;
+			}
+			$scope['package'] = result;
+		});
+	}
+
+	/**
+	 * Enter press event handler. Changes the location to start a search
+	 **/
+	$scope.keyup = function (keyCode) {
+		var isEnter = (keyCode === 13);
 		if (!isEnter) {
 			return;
 		}
-		$scope.isLoadingPackage = true;
-		packages.get($scope.query, function (err, result) {
-			$scope.isLoadingPackage = false;
-			if (err) {
-				$scope.package = {query: $scope.query, notfound: true};
-				return;
-			}
-			$scope.package = result;
-		});
+		var args = {};
+		if ($scope.query) {
+			args['package'] = $scope.query;
+		}
+		if ($scope.DEBUG) {
+			args.debug = 'true';
+		}
+		$location.search(args);
 	};
 }]);
