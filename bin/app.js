@@ -55,7 +55,7 @@ exports.stopServer = function(callback) {
 };
 
 function servePackagesList (request, response) {
-	packagesCollection.find({}, {name: true}, function(error, result) {
+	packagesCollection.find({}, {name: true}).toArray(function(error, result) {
 		if (error) {
 			response.send(500);
 			return;

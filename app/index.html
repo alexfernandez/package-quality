@@ -35,7 +35,8 @@
 					   ng-model="query"
 					   ng-keyup="keyup($event.keyCode)"
 					   typeahead="package for package in autocompletablePackages | filter:$viewValue"
-					   typeahead-min-length="3"
+					   typeahead-min-length="4"
+					   typeahead-wait-ms="1000"
 					   class="form-control"
 					   placeholder="Type a package name and press ENTER"/>
 			</div>
