@@ -10,7 +10,11 @@ app.factory('packages', ['$http', function ($http) {
 
 	return {
 		get: function (packageName, callback) {
-			var url = '/package/' + packageName;
+			if (typeof packageName === 'function') {
+				callback = packageName;
+				packageName = null;
+			}
+			var url = packageName ? '/package/' + packageName : '/packages';
 			$http.get(url).success(function (result) {
 				callback(null, result);
 			}).error(function (description, status) {
@@ -86,6 +90,13 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	 * Autocompletable packages
 	 **/
 	$scope.autocompletablePackages = ['hola', 'adios'];
+	packages.get(function (err, packages) {
+		if (err || !Array.isArray(packages)) {
+			return;
+		}
+		$scope.autocompletablePackages = packages;
+		console.log('Available packages ready!: %d packages', packages.length);
+	});
 
 	/**
 	 * When location changes
@@ -126,6 +137,9 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 		return Math.floor(pack.quality * 5);
 	};
 
+	/**
+	 * Retrieve the package info through HTTP
+	 **/
 	function loadPackage(packageName) {
 		$scope['package'] = null;
 		$scope.isLoadingPackage = true;
