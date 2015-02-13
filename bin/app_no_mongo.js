@@ -31,6 +31,7 @@ exports.startServer = function(port, callback) {
     app.set('jsonp callback', true);
     // GET requests
     app.get('/package/:package', serve);
+    app.get('/packages', servePackagesList);
     // read all.json
     log.info('loading all.json...');
     try
@@ -56,6 +57,11 @@ exports.stopServer = function(callback) {
         callback(null);
     });
 };
+
+function servePackagesList (request, response) {
+	var packages = Object.keys(all);
+	response.send(packages);
+}
 
 function serve (request, response) {
     var npmPackage = request.params.package;
