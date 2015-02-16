@@ -304,6 +304,40 @@ function testProcessUpdates(callback)
 	});
 }
 
+function testProcessPendings(callback)
+{
+	var pendings = [
+		{previousEstimation: {name: 'name1'},
+		pending:[{pages:[1, 3]}]}
+	];
+	var githubApiRemainingCalls = 10;
+	var githubApiResetLimit = 100;
+	// stub estimator.pending
+	estimator.pending = function(pending, internalCallback) {
+		testing.assertEquals(pending[0].pages[0], 1, 'wrong start page in pending', callback);
+		testing.assertEquals(pending[0].pages[1], 3, 'wrong end page in pending', callback);
+		internalCallback(null, {check: 1,
+			githubApiRemainingCalls: githubApiRemainingCalls,
+			githubApiResetLimit: githubApiResetLimit});
+	};
+	// stub packagesCollection
+	packagesCollection = {
+		update: function(query, update, options, internalCallback) {
+			testing.assertEquals(query.name, 'name1', 'wrong name passed to db.update', callback);
+			testing.assert(options.upsert, 'upsert should be set to true', callback);
+			testing.assertEquals(update.$set.check, 1, 'wrong element passed as name1', callback);
+			internalCallback(null);
+		}
+	};
+	processPendings(pendings, 0, 0, function (error, result)
+	{
+		testing.check(error, callback);
+		testing.assertEquals(result.githubApiRemainingCalls, githubApiRemainingCalls, 'wrong githubApiRemainingCalls returned', callback);
+		testing.assertEquals(result.githubApiResetLimit, githubApiResetLimit, 'wrong githubApiResetLimit returned', callback);
+		testing.success(callback);
+	});
+}
+
 function testChunkProcessor(callback)
 {
 	var chunk = [];
@@ -338,7 +372,8 @@ function testChunkProcessor(callback)
 exports.test = function(callback)
 {
     testing.run([
-    	testProcessUpdates,
+		testProcessUpdates,
+		testProcessPendings,
         testChunkProcessor
     ], function() {
         db.close(function(error) {
