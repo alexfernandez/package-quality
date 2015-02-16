@@ -19,10 +19,10 @@ exports.mongoConnection = 'mongodb://localhost/quality?autoReconnect=true&connec
 exports.testMongoConnection = 'mongodb://localhost/qualitytest?autoReconnect=true&connectTimeoutMS=5000';
 
 try {
-    var localConfig = require("./local-config.js");
+    var localConfig = require('./local-config.js');
     for (var key in localConfig) {
         exports[key] = localConfig[key];
     }
 } catch(exception) {
-    log.notice("local-config.js not found");
+    log.notice('local-config.js not found');
 }

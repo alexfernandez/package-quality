@@ -54,6 +54,7 @@ function serve (request, response) {
 	var npmPackage = request.params.package;
 	packagesCollection.findOne({name: npmPackage}, function(error, result) {
 		if (error || !result) {
+			delete result._id;
 			return response.status(403).send({error: 'package ' + npmPackage + ' not found.'});
 		}
 		return response.jsonp(result);
