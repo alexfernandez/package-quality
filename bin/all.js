@@ -87,9 +87,9 @@ exports.goOver = function(offset, callback)
 		{
 			series.push(getChunkProcessor(chunks.shift()));
 		}
+		log.debug('series has length ' + series.length);
 		async.series(series, function(error)
 		{
-			log.info('Returned from series ', error);
 			if (error)
 			{
 				callback(error);
@@ -109,6 +109,7 @@ function getEstimator(entry)
 
 function getChunkProcessor(chunk)
 {
+	log.debug('Returning chunk processor for chunk ' + chunk.length);
 	return function(callback)
 	{
 		log.info('About to process chunk.');
