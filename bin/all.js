@@ -115,6 +115,7 @@ function getChunkProcessor(chunk)
 		{
 			if (error)
 			{
+				log.error('Chunck processed with error ', error);
 				return callback(error);
 			}
 			log.info('Chunk processed.');
