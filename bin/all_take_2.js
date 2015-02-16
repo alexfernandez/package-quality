@@ -118,14 +118,15 @@ function getChunkProcessor(chunk)
     {
         log.info('About to process chunk: ' + chunk.length);
 
-        setTimeout(function() {
+        /*setTimeout(function() {
             log.info('Chunk processed.');
-            //callback(null);
-        }, 2000);
+            callback(null);
+        }, 2000);*/
 
-        /*async.parallel(chunk, function(error, estimations)
+        async.parallel(chunk, function(error, estimations)
         {
-        });*/
+            log.info('Chunk processed. I refuse to call back.');
+        });
 
         /*async.parallel(chunk, function(error, estimations)
         {
