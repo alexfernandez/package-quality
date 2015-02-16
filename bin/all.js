@@ -104,7 +104,7 @@ function getEstimator(entry)
 	return function(callback)
 	{
 		estimator.estimate(entry, function (error, result) {
-			log.debug('Estimation performed for ' + entry.name + ' Error: ', error);
+			log.info('Estimation performed for ' + entry.name + ' Error: ', error);
 			callback(error, result);
 		});
 	};
