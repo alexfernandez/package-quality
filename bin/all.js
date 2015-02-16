@@ -103,6 +103,7 @@ function getEstimator(entry)
 {
 	return function(callback)
 	{
+		log.info('Estimator about to be called: ' + entry.name);
 		estimator.estimate(entry, function (error, result) {
 			log.info('Estimation performed for ' + entry.name + ' Error: ', error);
 			callback(error, result);
