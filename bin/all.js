@@ -89,6 +89,7 @@ exports.goOver = function(offset, callback)
 		}
 		async.series(series, function(error)
 		{
+			log.info('Returned from series ', error);
 			if (error)
 			{
 				callback(error);
@@ -115,7 +116,7 @@ function getChunkProcessor(chunk)
 		{
 			if (error)
 			{
-				log.error('Chunck processed with error ', error);
+				log.error('Chunk processed with error ', error);
 				return callback(error);
 			}
 			log.info('Chunk processed.');
