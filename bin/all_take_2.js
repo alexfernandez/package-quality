@@ -125,7 +125,12 @@ function getChunkProcessor(chunk)
 
         async.parallel(chunk, function(error, estimations)
         {
-            log.info('Chunk processed. I refuse to call back.');
+            log.info('Chunk processed. I will call back in two seconds');
+            log.info('Estimations received: ' + estimations.length);
+            setTimeout(function() {
+                log.info('Chunk processed and timed out.');
+                callback(null);
+            }, 2000);
         });
 
         /*async.parallel(chunk, function(error, estimations)
