@@ -278,6 +278,32 @@ var processPendings = function (pendings, githubApiRemainingCalls, githubApiRese
 /************************************************
  **************** UNIT TESTS ********************
  ************************************************/
+function testProcessUpdates(callback)
+{
+	var estimations = [
+		{name: 'name1', check: 1},
+		{name: 'name2', check: 2}
+	];
+	// stub packagesCollection
+	packagesCollection = {
+		update: function(query, update, options, internalCallback) {
+			testing.assertEquals(typeof query.name, 'string', 'wrong type passed as query.name to db.update', callback);
+			testing.assert(options.upsert, 'upsert should be set to true', callback);
+			if (query.name === 'name1') {
+				testing.assertEquals(update.$set.check, 1, 'wrong element passed as name1', callback);
+			}
+			else {
+				testing.assertEquals(update.$set.check, 2, 'wrong element passed as name2', callback);
+			}
+			internalCallback(null);
+		}
+	};
+	processUpdates(estimations, function(error) {
+		testing.check(error, callback);
+		testing.success(callback);
+	});
+}
+
 function testChunkProcessor(callback)
 {
 	var chunk = [];
@@ -312,6 +338,7 @@ function testChunkProcessor(callback)
 exports.test = function(callback)
 {
     testing.run([
+    	testProcessUpdates,
         testChunkProcessor
     ], function() {
         db.close(function(error) {
