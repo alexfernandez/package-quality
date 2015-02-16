@@ -103,17 +103,12 @@ function getEstimator(entry)
 {
 	return function(callback)
 	{
-		log.info('Estimator about to be called: ' + entry.name);
-		estimator.estimate(entry, function (error, result) {
-			log.info('Estimation performed for ' + entry.name + ' Error: ', error);
-			callback(error, result);
-		});
+		estimator.estimate(entry, callback);
 	};
 }
 
 function getChunkProcessor(chunk)
 {
-	log.debug('Returning chunk processor for chunk ' + chunk.length);
 	return function(callback)
 	{
 		log.info('About to process chunk: ' + chunk.length);
@@ -127,6 +122,7 @@ function getChunkProcessor(chunk)
 			log.info('Chunk processed.');
 			// Adjust pending, remaining calls, etc
 			var pendings = [];
+			var updates = [];
 			var githubApiRemainingCalls = 9999999;
 			var githubApiResetLimit;
 			estimations.forEach(function (estimation)
@@ -149,8 +145,91 @@ function getChunkProcessor(chunk)
 				}
 				else
 				{
-					// add to db!!
 					var finalEstimation = estimator.addQuality(estimation);
+					updates.push(finalEstimation);
+				}
+			});
+			// process updates, and then pendings
+			var updatesPendingsStream = [];
+			updatesPendingsStream.push(function (callback)
+			{
+				processUpdates(updates, callback);
+			});
+			updatesPendingsStream.push(function (callback)
+			{
+				processPendings(pendings, callback);
+			});
+			async.waterfall(updatesPendingsStream, function (error, result)
+			{
+				githubApiRemainingCalls = result.githubApiRemainingCalls;
+				githubApiResetLimit = result.githubApiResetLimit;
+				// check remaining api calls.
+				if (githubApiRemainingCalls < limit)
+				{
+					var now = moment().unix();
+					if (githubApiResetLimit > now)
+					{
+						var millisecondsToWait = (githubApiResetLimit - now) * 1000;
+						log.info('Waiting ' + millisecondsToWait + ' milliseconds until next chunk');
+						setTimeout(function()
+						{
+							return callback(null);
+						}, millisecondsToWait);
+					}
+					else
+					{
+						return callback(null);
+					}
+				}
+				else
+				{
+					return callback(null);
+				}
+			});
+		});
+	};
+}
+
+function processUpdates(estimations, callback)
+{
+	var updatesStream = [];
+	estimations.forEach(function (estimation)
+	{
+		updatesStream.push(function (callback)
+		{
+			packagesCollection.update({name: estimation.name}, {'$set':estimation}, {upsert: true}, function(error)
+			{
+				if (error)
+				{
+					log.error('Package ' + estimation.name + ' could not be upserted in the database: ' + JSON.stringify(error));
+				}
+				return callback(null);
+			});
+		});
+	});
+	async.parallel(updatesStream, callback);
+}
+
+function processPendings(pendings, githubApiRemainingCalls, githubApiResetLimit, callback)
+{
+	// stream the pending stuff	
+	var pendingStream = [];
+	pendings.forEach(function (pendingItem)
+	{
+		// only pending issues so far
+		pendingStream.push(function (callback)
+		{
+			log.info('Processing pending for ' + pendingItem.previousEstimation.name);
+			// function to process pending item
+			function processPendingItem(pendingItem)
+			{
+				estimator.pending(pendingItem.pending, function (error, pendingEstimation)
+				{
+					githubApiRemainingCalls = pendingEstimation.githubApiRemainingCalls;
+					githubApiResetLimit = pendingEstimation.githubApiResetLimit;
+					delete pendingEstimation.githubApiRemainingCalls;
+					delete pendingEstimation.githubApiResetLimit;
+					var finalEstimation = estimator.addQuality(pendingItem.previousEstimation.concat(pendingEstimation));
 					packagesCollection.update({name: finalEstimation.name}, {'$set':finalEstimation}, {upsert: true}, function(error)
 					{
 						if (error)
@@ -159,93 +238,42 @@ function getChunkProcessor(chunk)
 						}
 						return callback(null);
 					});
-				}
-			});
-			// stream the pending stuff
-			if (pendings.length > 0)
-			{
-				var pendingStream = [];
-				pendings.forEach(function (pendingItem)
-				{
-					// only pending issues so far
-					pendingStream.push(function (callback)
-					{
-						log.info('Processing pending for ' + pendingItem.previousEstimation.name);
-						// function to process pending item
-						function processPendingItem(pendingItem)
-						{
-							estimator.pending(pendingItem.pending, function (error, pendingEstimation)
-							{
-								githubApiRemainingCalls = pendingEstimation.githubApiRemainingCalls;
-								githubApiResetLimit = pendingEstimation.githubApiResetLimit;
-								delete pendingEstimation.githubApiRemainingCalls;
-								delete pendingEstimation.githubApiResetLimit;
-								var finalEstimation = estimator.addQuality(pendingItem.previousEstimation.concat(pendingEstimation));
-								packagesCollection.update({name: finalEstimation.name}, {'$set':finalEstimation}, {upsert: true}, function(error)
-								{
-									if (error)
-									{
-										log.error('Package ' + finalEstimation.name + ' could not be upserted in the database: ' + JSON.stringify(error));
-									}
-									return callback(null);
-								});
-							});
-						}
-						// pending API calls
-						var apiCallsForThisPending = pendingItem.pending[0].pages[1] - pendingItem.pending[0].pages[0] + 1;
-						// check remaining api calls.
-						if (githubApiRemainingCalls < apiCallsForThisPending)
-						{
-							var now = moment().unix();
-							if (githubApiResetLimit > now)
-							{
-								var millisecondsToWait = (githubApiResetLimit - now) * 1000;
-								log.info('Waiting in pendings ' + millisecondsToWait + ' milliseconds until next pending');
-								setTimeout(function()
-								{
-									processPendingItem(pendingItem);
-								}, millisecondsToWait);
-							}
-							else
-							{
-								processPendingItem(pendingItem);
-							}
-						}
-						else
-						{
-							processPendingItem(pendingItem);
-						}
-					});
-				});
-				// run pending stream
-				async.series(pendingStream, function()
-				{
-					// check remaining api calls.
-					if (githubApiRemainingCalls < limit)
-					{
-						var now = moment().unix();
-						if (githubApiResetLimit > now)
-						{
-							var millisecondsToWait = (githubApiResetLimit - now) * 1000;
-							log.info('Waiting ' + millisecondsToWait + ' milliseconds until next chunk');
-							setTimeout(function()
-							{
-								return callback(null);
-							}, millisecondsToWait);
-						}
-						else
-						{
-							return callback(null);
-						}
-					}
-					else
-					{
-						return callback(null);
-					}
 				});
 			}
+			// pending API calls
+			var apiCallsForThisPending = pendingItem.pending[0].pages[1] - pendingItem.pending[0].pages[0] + 1;
+			// check remaining api calls.
+			if (githubApiRemainingCalls < apiCallsForThisPending)
+			{
+				var now = moment().unix();
+				if (githubApiResetLimit > now)
+				{
+					var millisecondsToWait = (githubApiResetLimit - now) * 1000;
+					log.info('Waiting in pendings ' + millisecondsToWait + ' milliseconds until next pending');
+					setTimeout(function()
+					{
+						processPendingItem(pendingItem);
+					}, millisecondsToWait);
+				}
+				else
+				{
+					processPendingItem(pendingItem);
+				}
+			}
+			else
+			{
+				processPendingItem(pendingItem);
+			}
 		});
-	};
+	});
+	// run pending stream
+	async.series(pendingStream, function()
+	{
+		return callback (null, {
+			githubApiRemainingCalls: githubApiRemainingCalls,
+			githubApiResetLimit: githubApiResetLimit
+		});
+	});
 }
 
 // run script if invoked directly
