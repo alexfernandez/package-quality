@@ -306,9 +306,9 @@ function processPendings(pendings, githubApiRemainingCalls, githubApiResetLimit,
     });
 }
 
-/**
- * Unit tests.
- */
+/************************************************
+ **************** UNIT TESTS ********************
+ ************************************************/
 function testEstimatorNewEntry(callback)
 {
     var newEntry = {name: 'newEntry'};
