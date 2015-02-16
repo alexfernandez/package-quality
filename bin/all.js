@@ -157,7 +157,7 @@ function getChunkProcessor(chunk)
 			});
 			updatesPendingsStream.push(function (callback)
 			{
-				processPendings(pendings, callback);
+				processPendings(pendings, githubApiRemainingCalls, githubApiResetLimit, callback);
 			});
 			async.waterfall(updatesPendingsStream, function (error, result)
 			{
