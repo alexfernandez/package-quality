@@ -3,30 +3,31 @@
 
 /**
  * Update only expired packages (those with nextUpdate previous to current date)
- * (C) 2014 Alex Fernández.
+ * (C) 2015 Diego Lafuente.
  */
 
 // requires
+require('prototypes');
 var config = require('../config.js');
 var db = require('../lib/db.js');
-var estimation = require('../lib/estimation.js');
+var estimator = require('../lib/estimation.js');
 var async = require('async');
 var moment = require('moment');
-var testing = require('testing');
 var Log = require('log');
+var testing = require('testing');
 
 // globals
 var log = new Log(config.logLevel);
-var githubApiRemainingCalls;
-var githubApiResetLimit;
 var limit = config.limit;
 var packagesCollection;
 
 /**
- * Go over all the packages in all.json check if it needs to be updated and update it
+ * Go over all the packages in all.json and update mongo if required.
  * There are two constraints:
  *   - Github only allows 5000 requests per hour.
  *   - We should use config.limit to avoid RangeErrors in the stack size
+ * @param offset[optional]: offset over the all.json file. Defaults to zero.
+ * @param callback[required]: a function(error, result) with the results of the process
  */
 exports.goOver = function(offset, callback)
 {
@@ -68,7 +69,6 @@ exports.goOver = function(offset, callback)
     for (var name in all)
     {
         var entry = all[name];
-        log.debug('Going over package %s: %s', name, JSON.stringify(entry, null, '\t'));
         var index = Math.floor(packageCount/limit);
         chunks[index].push(getEstimator(entry));
         packageCount++;
@@ -86,6 +86,7 @@ exports.goOver = function(offset, callback)
         {
             series.push(getChunkProcessor(chunks.shift()));
         }
+        log.debug('series has length ' + series.length);
         async.series(series, function(error)
         {
             if (error)
@@ -103,8 +104,7 @@ function getEstimator(entry)
     {
         var name = entry.name;
         var now = moment();
-        // check if the package is in the database
-        packagesCollection.findOne({name: name}, function(error, item)
+        packagesCollection.findOne({name: name}, function (error, item)
         {
             var isNewEntry = error || !item;
             var shouldUpdate = isNewEntry || (moment(item.nextUpdate) < now);
@@ -115,43 +115,23 @@ function getEstimator(entry)
                 return callback(null);
             }
             // update!!
-            estimation.estimate(entry, function(error, result)
+            estimator.estimate(entry, function (error, estimation)
             {
-                if (error || !result)
-                {
-                    callback(error);
-                }
-                if (result.githubApiRemainingCalls && result.githubApiResetLimit)
-                {
-                    githubApiRemainingCalls = result.githubApiRemainingCalls;
-                    githubApiResetLimit = result.githubApiResetLimit;
-                    log.debug('githubApiRemainingCalls: ' + githubApiRemainingCalls);
-                    log.debug('githubApiResetLimit: ' + githubApiResetLimit);
-                }
-                delete result.githubApiRemainingCalls;
-                delete result.githubApiResetLimit;
                 // new entry?
-                if (!isNewEntry)
+                if (!isNewEntry && estimation)
                 {
-                    delete result.created;
-                    result.timesUpdated = item.timesUpdated + 1;
+                    delete estimation.created;
+                    estimation.timesUpdated = item.timesUpdated + 1;
                     // should we defer the update one year
                     var created = moment(item.created);
-                    var lastUpdated = moment(result.lastUpdated);
+                    var lastUpdated = moment(estimation.lastUpdated);
                     var monthsAgo = lastUpdated.diff(created, 'months');
-                    if ((monthsAgo > 11) && (result.timesUpdated <= (monthsAgo + 1)))
+                    if ((monthsAgo > 11) && (estimation.timesUpdated <= (monthsAgo + 1)))
                     {
-                        result.nextUpdate = moment(lastUpdated).add(1, 'years');
+                        estimation.nextUpdate = moment(lastUpdated).add(1, 'years');
                     }
                 }
-                packagesCollection.update({name: result.name}, {'$set':result}, {upsert: true}, function(error)
-                {
-                    if (error)
-                    {
-                        log.error('Package ' + result.name + ' could not be upserted in the database: ' + JSON.stringify(error));
-                    }
-                    callback(null);
-                });
+                return callback (error, estimation);
             });
         });
     };
@@ -161,50 +141,181 @@ function getChunkProcessor(chunk)
 {
     return function(callback)
     {
-        log.info('About to process chunk.');
-        async.parallel(chunk, function(error)
+        log.info('About to process chunk: ' + chunk.length);
+        async.parallel(chunk, function(error, estimations)
         {
             if (error)
             {
+                log.error('Chunk processed with error ', error);
                 return callback(error);
             }
             log.info('Chunk processed.');
-            // check remaining api calls.
-            if (githubApiRemainingCalls < limit)
+            // Adjust pending, remaining calls, etc
+            var pendings = [];
+            var updates = [];
+            var githubApiRemainingCalls = 9999999;
+            var githubApiResetLimit;
+            estimations.forEach(function (estimation)
             {
-                var now = moment().unix();
-                if (githubApiResetLimit > now)
+                if (estimation.githubApiRemainingCalls < githubApiRemainingCalls)
                 {
-                    var millisecondsToWait = (githubApiResetLimit - now) * 1000;
-                    log.info('Waiting ' + millisecondsToWait + ' milliseconds until next chunk');
-                    setTimeout(function()
+                    githubApiRemainingCalls = estimation.githubApiRemainingCalls;
+                    githubApiResetLimit = estimation.githubApiResetLimit;
+                }
+                delete estimation.githubApiRemainingCalls;
+                delete estimation.githubApiResetLimit;
+                if (estimation.pending)
+                {
+                    var item = {
+                        pending: estimation.pending
+                    };
+                    delete estimation.pending;
+                    item.previousEstimation = estimation;
+                    pendings.push(item);
+                }
+                else
+                {
+                    var finalEstimation = estimator.addQuality(estimation);
+                    updates.push(finalEstimation);
+                }
+            });
+            // process updates, and then pendings
+            var updatesPendingsStream = [];
+            updatesPendingsStream.push(function (callback)
+            {
+                processUpdates(updates, callback);
+            });
+            updatesPendingsStream.push(function (result, callback)
+            {
+                processPendings(pendings, githubApiRemainingCalls, githubApiResetLimit, callback);
+            });
+            async.waterfall(updatesPendingsStream, function (error, result)
+            {
+                githubApiRemainingCalls = result.githubApiRemainingCalls;
+                githubApiResetLimit = result.githubApiResetLimit;
+                // check remaining api calls.
+                if (githubApiRemainingCalls < limit)
+                {
+                    var now = moment().unix();
+                    if (githubApiResetLimit > now)
+                    {
+                        var millisecondsToWait = (githubApiResetLimit - now) * 1000;
+                        log.info('Waiting ' + millisecondsToWait + ' milliseconds until next chunk');
+                        setTimeout(function()
+                        {
+                            return callback(null);
+                        }, millisecondsToWait);
+                    }
+                    else
                     {
                         return callback(null);
-                    }, millisecondsToWait);
+                    }
                 }
                 else
                 {
                     return callback(null);
                 }
+            });
+        });
+    };
+}
+
+function processUpdates(estimations, callback)
+{
+    var updatesStream = [];
+    estimations.forEach(function (estimation)
+    {
+        updatesStream.push(function (callback)
+        {
+            packagesCollection.update({name: estimation.name}, {'$set':estimation}, {upsert: true}, function(error)
+            {
+                if (error)
+                {
+                    log.error('Package ' + estimation.name + ' could not be upserted in the database: ' + JSON.stringify(error));
+                }
+                return callback(null);
+            });
+        });
+    });
+    async.parallel(updatesStream, callback);
+}
+
+function processPendings(pendings, githubApiRemainingCalls, githubApiResetLimit, callback)
+{
+    // stream the pending stuff 
+    var pendingStream = [];
+    pendings.forEach(function (pendingItem)
+    {
+        // only pending issues so far
+        pendingStream.push(function (callback)
+        {
+            log.info('Processing pending for ' + pendingItem.previousEstimation.name);
+            // function to process pending item
+            function processPendingItem(pendingItem)
+            {
+                estimator.pending(pendingItem.pending, function (error, pendingEstimation)
+                {
+                    githubApiRemainingCalls = pendingEstimation.githubApiRemainingCalls;
+                    githubApiResetLimit = pendingEstimation.githubApiResetLimit;
+                    delete pendingEstimation.githubApiRemainingCalls;
+                    delete pendingEstimation.githubApiResetLimit;
+                    var finalEstimation = estimator.addQuality(pendingItem.previousEstimation.concat(pendingEstimation));
+                    packagesCollection.update({name: finalEstimation.name}, {'$set':finalEstimation}, {upsert: true}, function(error)
+                    {
+                        if (error)
+                        {
+                            log.error('Package ' + finalEstimation.name + ' could not be upserted in the database: ' + JSON.stringify(error));
+                        }
+                        return callback(null);
+                    });
+                });
+            }
+            // pending API calls
+            var apiCallsForThisPending = pendingItem.pending[0].pages[1] - pendingItem.pending[0].pages[0] + 1;
+            // check remaining api calls.
+            if (githubApiRemainingCalls < apiCallsForThisPending)
+            {
+                var now = moment().unix();
+                if (githubApiResetLimit > now)
+                {
+                    var millisecondsToWait = (githubApiResetLimit - now) * 1000;
+                    log.info('Waiting in pendings ' + millisecondsToWait + ' milliseconds until next pending');
+                    setTimeout(function()
+                    {
+                        processPendingItem(pendingItem);
+                    }, millisecondsToWait);
+                }
+                else
+                {
+                    processPendingItem(pendingItem);
+                }
             }
             else
             {
-                return callback(null);
+                processPendingItem(pendingItem);
             }
         });
-    };
+    });
+    // run pending stream
+    async.series(pendingStream, function()
+    {
+        return callback (null, {
+            githubApiRemainingCalls: githubApiRemainingCalls,
+            githubApiResetLimit: githubApiResetLimit
+        });
+    });
 }
 
 /**
  * Unit tests.
  */
-function testUpdateNewEntry(callback)
+function testEstimatorNewEntry(callback)
 {
     var newEntry = {name: 'newEntry'};
     var now = moment().format();
     var nextUpdate = moment(now).add(1, 'month').format();
     // stubs
-    estimation = {
+    estimator = {
         estimate: function(entry, internalCallback) {
             testing.assertEquals(entry.name, newEntry.name, 'wrong entry passed to estimate', callback);
             return internalCallback(null, {
@@ -219,30 +330,26 @@ function testUpdateNewEntry(callback)
         findOne: function(query, internalCallback) {
             testing.assertEquals(query.name, newEntry.name, 'wrong name passed to findOne', callback);
             return internalCallback(true);
-        },
-        update: function(query, update, options, internalCallback) {
-            testing.assertEquals(query.name, newEntry.name, 'wrong name passed to update in query', callback);
-            testing.assertEquals(update.$set.name, newEntry.name, 'wrong name passed to update in set', callback);
-            testing.assertEquals(moment(update.$set.created).diff(now), 0, 'wrong created time passed to update in set', callback);
-            testing.assertEquals(moment(update.$set.nextUpdate).diff(nextUpdate), 0, 'wrong nextUpdate time passed to update in set', callback);
-            testing.assertEquals(update.$set.timesUpdated, 0, 'wrong timesUpdated passed to update in set', callback);
-            return internalCallback(null);
         }
     };
-    var estimator = getEstimator(newEntry);
-    estimator(function(error) {
+    var theEstimator = getEstimator(newEntry);
+    theEstimator(function(error, estimation) {
         testing.check(error, callback);
+        testing.assertEquals(estimation.name, newEntry.name, 'wrong name returned by the estimator', callback);
+        testing.assertEquals(estimation.created, now, 'wrong created returned by the estimator', callback);
+        testing.assertEquals(estimation.nextUpdate, nextUpdate, 'wrong nextUpdate returned by the estimator', callback);
+        testing.assertEquals(estimation.timesUpdated, 0, 'wrong timesUpdated returned by the estimator', callback);
         testing.success(callback);
     });
 }
 
-function testUpdateExistingEntryShouldUpdate(callback)
+function testEstimatorExistingEntryShouldUpdate(callback)
 {
     var existingEntry = {name: 'existingEntry'};
     var now = moment().format();
     var nextUpdate = moment(now).add(1, 'month').format();
     // stubs
-    estimation = {
+    estimator = {
         estimate: function(entry, internalCallback) {
             testing.assertEquals(entry.name, existingEntry.name, 'wrong entry passed to estimate', callback);
             return internalCallback(null, {
@@ -261,30 +368,26 @@ function testUpdateExistingEntryShouldUpdate(callback)
                 nextUpdate: moment(now).subtract(1, 'second').format(),
                 timesUpdated: 7
             });
-        },
-        update: function(query, update, options, internalCallback) {
-            testing.assertEquals(query.name, existingEntry.name, 'wrong name passed to update in query', callback);
-            testing.assertEquals(update.$set.name, existingEntry.name, 'wrong name passed to update in set', callback);
-            testing.assertEquals(moment(update.$set.nextUpdate).diff(nextUpdate), 0, 'wrong nextUpdate time passed to update in set', callback);
-            testing.assertEquals(update.$set.timesUpdated, 8, 'wrong timesUpdated passed to update in set', callback);
-            testing.check(update.$set.created, 'created should not be passed to update in set', callback);
-            return internalCallback(null);
         }
     };
-    var estimator = getEstimator(existingEntry);
-    estimator(function(error) {
+    var theEstimator = getEstimator(existingEntry);
+    theEstimator(function(error, estimation) {
         testing.check(error, callback);
+        testing.assertEquals(estimation.name, existingEntry.name, 'wrong name returned by the estimator', callback);
+        testing.check(estimation.created, 'created should be deleted in existing entries', callback);
+        testing.assertEquals(estimation.nextUpdate, nextUpdate, 'wrong nextUpdate returned by the estimator', callback);
+        testing.assertEquals(estimation.timesUpdated, 8, 'wrong timesUpdated returned by the estimator', callback);
         testing.success(callback);
     });
 }
 
-function testUpdateExistingEntryShouldUpdateAndDefer(callback)
+function testEstimatorExistingEntryShouldUpdateAndDefer(callback)
 {
     var existingEntry = {name: 'existingEntry'};
     var now = moment().format();
     var nextUpdate = moment(now).add(1, 'month').format();
     // stubs
-    estimation = {
+    estimator = {
         estimate: function(entry, internalCallback) {
             testing.assertEquals(entry.name, existingEntry.name, 'wrong entry passed to estimate', callback);
             return internalCallback(null, {
@@ -305,29 +408,25 @@ function testUpdateExistingEntryShouldUpdateAndDefer(callback)
                 nextUpdate: moment(now).subtract(1, 'second').format(),
                 timesUpdated: 12
             });
-        },
-        update: function(query, update, options, internalCallback) {
-            testing.assertEquals(query.name, existingEntry.name, 'wrong name passed to update in query', callback);
-            testing.assertEquals(update.$set.name, existingEntry.name, 'wrong name passed to update in set', callback);
-            testing.assertEquals(moment(update.$set.nextUpdate).diff(now, 'years'), 1, 'wrong nextUpdate time passed to update in set', callback);
-            testing.assertEquals(update.$set.timesUpdated, 13, 'wrong timesUpdated passed to update in set', callback);
-            testing.check(update.$set.created, 'created should not be passed to update in set', callback);
-            return internalCallback(null);
         }
     };
-    var estimator = getEstimator(existingEntry);
-    estimator(function(error) {
+    var theEstimator = getEstimator(existingEntry);
+    theEstimator(function(error, estimation) {
         testing.check(error, callback);
+        testing.assertEquals(estimation.name, existingEntry.name, 'wrong name returned by the estimator', callback);
+        testing.check(estimation.created, 'created should be deleted in existing entries', callback);
+        testing.assertEquals(moment(estimation.nextUpdate).diff(now, 'years'), 1, 'wrong nextUpdate returned by the estimator', callback);
+        testing.assertEquals(estimation.timesUpdated, 13, 'wrong timesUpdated returned by the estimator', callback);
         testing.success(callback);
     });
 }
 
-function testUpdateExistingEntryShouldNotUpdate(callback)
+function testEstimatorExistingEntryShouldNotUpdate(callback)
 {
     var existingEntry = {name: 'existingEntry'};
     var now = moment();
     // stubs
-    estimation = {
+    estimator = {
         estimate: function() {
             testing.check(true, 'estimate should never be called', callback);
         }
@@ -339,13 +438,10 @@ function testUpdateExistingEntryShouldNotUpdate(callback)
                 name: query.name,
                 nextUpdate: moment(now).add(1, 'second').format(),
             });
-        },
-        update: function() {
-            testing.check(true, 'update should never be called', callback);
         }
     };
-    var estimator = getEstimator(existingEntry);
-    estimator(function(error) {
+    var theEstimator = getEstimator(existingEntry);
+    theEstimator(function(error) {
         testing.check(error, callback);
         testing.success(callback);
     });
@@ -357,10 +453,10 @@ function testUpdateExistingEntryShouldNotUpdate(callback)
 exports.test = function(callback)
 {
     testing.run([
-        testUpdateNewEntry,
-        testUpdateExistingEntryShouldUpdate,
-        testUpdateExistingEntryShouldUpdateAndDefer,
-        testUpdateExistingEntryShouldNotUpdate
+        testEstimatorNewEntry,
+        testEstimatorExistingEntryShouldUpdate,
+        testEstimatorExistingEntryShouldUpdateAndDefer,
+        testEstimatorExistingEntryShouldNotUpdate
     ], function() {
         db.close(function(error) {
             callback(error);

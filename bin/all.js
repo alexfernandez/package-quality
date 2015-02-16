@@ -17,8 +17,6 @@ var Log = require('log');
 
 // globals
 var log = new Log(config.logLevel);
-//var githubApiRemainingCalls;
-//var githubApiResetLimit;
 var limit = config.limit;
 var packagesCollection;
 

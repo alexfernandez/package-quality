@@ -20,7 +20,8 @@ exports.test = function(callback)
 {
 	log.debug('Running tests');
 	var tests = {};
-	var libs = ['estimation', 'db'];
+	//var libs = ['estimation', 'db'];
+    var libs = [];
     var bin = ['update'];
 	libs.forEach(function(lib)
 	{
