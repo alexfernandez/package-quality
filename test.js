@@ -22,7 +22,7 @@ exports.test = function(callback)
 	var tests = {};
 	//var libs = ['estimation', 'db'];
     var libs = [];
-    var bin = ['update'];
+    var bin = ['all', 'update'];
 	libs.forEach(function(lib)
 	{
 		tests[lib] = require('./lib/' + lib + '.js').test;

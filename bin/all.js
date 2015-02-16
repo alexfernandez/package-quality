@@ -13,6 +13,7 @@ var db = require('../lib/db.js');
 var estimator = require('../lib/estimation.js');
 var async = require('async');
 var moment = require('moment');
+var testing = require('testing');
 var Log = require('log');
 
 // globals
@@ -188,7 +189,7 @@ function getChunkProcessor(chunk)
 	};
 }
 
-function processUpdates(estimations, callback)
+var processUpdates = function (estimations, callback)
 {
 	var updatesStream = [];
 	estimations.forEach(function (estimation)
@@ -206,9 +207,9 @@ function processUpdates(estimations, callback)
 		});
 	});
 	async.parallel(updatesStream, callback);
-}
+};
 
-function processPendings(pendings, githubApiRemainingCalls, githubApiResetLimit, callback)
+var processPendings = function (pendings, githubApiRemainingCalls, githubApiResetLimit, callback)
 {
 	// stream the pending stuff	
 	var pendingStream = [];
@@ -272,7 +273,52 @@ function processPendings(pendings, githubApiRemainingCalls, githubApiResetLimit,
 			githubApiResetLimit: githubApiResetLimit
 		});
 	});
+};
+
+/************************************************
+ **************** UNIT TESTS ********************
+ ************************************************/
+function testChunkProcessor(callback)
+{
+	var chunk = [];
+	chunk.push(function (callback) {return callback(null, {check: 1});});
+	chunk.push(function (callback) {return callback(null, {check: 2});});
+	chunk.push(function (callback) {return callback(null, {check: 3, pending:{check: 4}});});
+	// mock processUpdates
+	processUpdates = function (estimations, internalCallback) {
+		testing.assertEquals(estimations.length, 2, 'wrong number of estimations received', callback);
+		testing.assertEquals(estimations[0].check, 1, 'wrong check number in estimation 0', callback);
+		testing.assertEquals(estimations[1].check, 2, 'wrong check number in estimation 1', callback);
+		return internalCallback(null, {});
+	};
+	// mock processPendings
+	processPendings = function (pendings, githubApiRemainingCalls, githubApiResetLimit, internalCallback)
+	{
+		testing.assertEquals(pendings.length, 1, 'wrong number of pendings received', callback);
+		testing.assertEquals(pendings[0].previousEstimation.check, 3, 'wrong check number in previousEstimation 0', callback);
+		testing.assertEquals(pendings[0].pending.check, 4, 'wrong check number in pending 0', callback);
+		return internalCallback(null, {});
+	};
+	var chunkProcessor = getChunkProcessor(chunk);
+	chunkProcessor(function (error) {
+		testing.check(error, callback);
+		testing.success(callback);
+	});
 }
+
+/**
+ * Run all tests.
+ */
+exports.test = function(callback)
+{
+    testing.run([
+        testChunkProcessor
+    ], function() {
+        db.close(function(error) {
+            callback(error);
+        });
+    });
+};
 
 // run script if invoked directly
 if (__filename == process.argv[1])
