@@ -155,7 +155,7 @@ function getChunkProcessor(chunk)
 			{
 				processUpdates(updates, callback);
 			});
-			updatesPendingsStream.push(function (callback)
+			updatesPendingsStream.push(function (result, callback)
 			{
 				processPendings(pendings, githubApiRemainingCalls, githubApiResetLimit, callback);
 			});
