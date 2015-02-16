@@ -103,7 +103,10 @@ function getEstimator(entry)
 {
 	return function(callback)
 	{
-		estimator.estimate(entry, callback);
+		estimator.estimate(entry, function (error, result) {
+			log.debug('Estimation performed for ' + entry.name + ' Error: ', error);
+			callback(error, result);
+		});
 	};
 }
 
@@ -112,7 +115,7 @@ function getChunkProcessor(chunk)
 	log.debug('Returning chunk processor for chunk ' + chunk.length);
 	return function(callback)
 	{
-		log.info('About to process chunk.');
+		log.info('About to process chunk: ' + chunk.length);
 		async.parallel(chunk, function(error, estimations)
 		{
 			if (error)
