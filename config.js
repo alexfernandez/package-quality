@@ -17,6 +17,7 @@ exports.expressPort = 8080;
 exports.packagesCollection = 'packages';
 exports.mongoConnection = 'mongodb://localhost/quality?autoReconnect=true&connectTimeoutMS=5000';
 exports.testMongoConnection = 'mongodb://localhost/qualitytest?autoReconnect=true&connectTimeoutMS=5000';
+exports.githubToken = '';
 
 try {
     var localConfig = require('./local-config.js');

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="PackageQuality">
+
+	<head>
+		<meta charset="UTF-8"/>
+		<title>Package Quality</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="description" content=""/>
+		<meta name="author" content=""/>
+		<link rel="icon" href="../../favicon.ico"/>
+
+		<link rel="stylesheet" href="css/style.css" media="screen" type="text/css"/>
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"/>
+		<link rel="stylesheet" href="lib/flat-ui/css/flat-ui.min.css"/>
+	</head>
+
+	<body ng-controller="MainController" style="padding-top: 3em; padding-bottom: 3em">
+
+		<!-- logo -->
+
+		<div class="row">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1">
+				<img src="lib/flat-ui/img/icons/svg/retina.svg" alt="Package" style="display: block; margin: 1em auto"/>
+			</div>
+		</div>
+
+		<!-- Search box -->
+
+		<div class="row">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1 form-group">
+				<input ng-disabled="isLoadingPackage"
+					   type="text"
+					   ng-model="query"
+					   ng-keyup="keyup($event.keyCode)"
+					   typeahead="package for package in autocompletablePackages | filter:$viewValue"
+					   typeahead-min-length="4"
+					   typeahead-wait-ms="1000"
+					   class="form-control"
+					   placeholder="Type a package name and press ENTER"/>
+			</div>
+		</div>
+
+		<!-- Package stats -->
+
+		<div class="row" ng-if="isLoadingPackage">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1" style="text-align: center; font-size: 3em; color: gray">
+				<i class="fa fa-spinner fa-spin"></i>
+			</div>
+		</div>
+
+		<div class="row" ng-if="!isLoadingPackage && package.query && package.notfound">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1">
+				Package "{{ package.query }}" not found.
+			</div>
+		</div>
+
+		<div class="row" ng-if="package && !package.notfound" style="padding-bottom: 1em">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1">
+
+				<div style="margin-bottom: 0.5em">
+					<h4 style="margin-bottom: 0">
+						{{ package.name }}
+						<span class="pull-right" style="font-size: smaller">
+							<span class="fui-star-2" ng-repeat="i in genArray(getStars(package)) track by $index"></span>
+							<span class="fui-star-2" style="color: #ccc" ng-repeat="i in genArray(5 - getStars(package)) track by $index"></span>
+						</span>
+					</h4>
+					<h7>
+						Package from <b>{{ package.source }}</b>
+					</h7>
+				</div>
+				<p>{{ package.description }}</p>
+
+				<div style="margin: 1.5em 0">
+					<div ng-repeat="metric in metrics">
+						{{ metric.label }}
+						<span class="pull-right">
+							{{ ((package[metric.key] || 0) * 100).toFixed(0) }}
+						</span>
+						<div class="progress">
+							<div class="progress-bar" style="width: {{ package[metric.key] * 100}}%;"></div>
+						</div>
+					</div>
+				</div>
+
+				<!--
+				<table style="width: 100%">
+					<tr ng-if="package.created" style="border-bottom: dashed 0.2em #ccc">
+						<td><b>Creation date</b></td>
+						<td style="text-align: right">{{ package.created | timeAgo : ['years', 'months', 'days'] }}</td>
+					</tr>
+					<tr ng-if="package.lastUpdated" style="border-bottom: dashed 0.2em #ccc">
+						<td><b>Last update date</b></td>
+						<td style="text-align: right">{{ package.lastUpdated | timeAgo : ['years', 'months', 'days'] }}</td>
+					</tr>
+				</table>
+				-->
+
+			</div>
+		</div>
+
+		<div class="row" ng-if="DEBUG && package">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1">
+				<h6>Debug info</h6>
+				<pre>{{ package | json }}</pre>
+			</div>
+		</div>
+
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular-animate.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular-aria.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<script src="lib/flat-ui/js/flat-ui.min.js"></script>
+		<script src="js/main.js"></script>
+		<script src="lib/angular-ui/ui-bootstrap-tpls-0.9.0.min.js"></script>
+	</body>
+</html>

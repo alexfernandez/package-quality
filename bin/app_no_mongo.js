@@ -8,6 +8,7 @@
 
 // requires
 require('prototypes');
+var path = require('path');
 var config = require('../config.js');
 var express = require('express');
 var estimator = require('../lib/estimation.js');
@@ -25,10 +26,13 @@ exports.startServer = function(port, callback) {
         port = config.expressPort;
     }
     var app = express();
+    // Static files
+    app.use(express.static(path.join(__dirname, '..', 'app')));
     // Enable JSONP
     app.set('jsonp callback', true);
     // GET requests
-    app.get('/:package', serve);
+    app.get('/package/:package', serve);
+    app.get('/packages', servePackagesList);
     // read all.json
     log.info('loading all.json...');
     try
@@ -54,6 +58,11 @@ exports.stopServer = function(callback) {
         callback(null);
     });
 };
+
+function servePackagesList (request, response) {
+	var packages = Object.keys(all);
+	response.send(packages);
+}
 
 function serve (request, response) {
     var npmPackage = request.params.package;
