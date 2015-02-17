@@ -21,7 +21,7 @@ exports.test = function(callback)
 	log.debug('Running tests');
 	var tests = {};
 	var libs = ['estimation', 'db'];
-    var factors = ['issues', 'versions'];
+    var factors = ['issues', 'versions', 'downloads'];
     var bin = ['all', 'update'];
 	libs.forEach(function(lib)
 	{
