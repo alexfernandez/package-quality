@@ -157,6 +157,10 @@ function getChunkProcessor(chunk)
             var githubApiResetLimit;
             estimations.forEach(function (estimation)
             {
+                if (!estimation || estimation.countProperties() === 0)
+                {
+                    return;
+                }
                 if (estimation.githubApiRemainingCalls < githubApiRemainingCalls)
                 {
                     githubApiRemainingCalls = estimation.githubApiRemainingCalls;
@@ -447,6 +451,19 @@ function testEstimatorExistingEntryShouldNotUpdate(callback)
     });
 }
 
+function testChunkProcessorUndefinedEstimation(callback)
+{
+    var chunk = [];
+    chunk.push(function (internalCallback) {
+        return internalCallback(null);
+    });
+    var chunkProcessor = getChunkProcessor(chunk);
+    chunkProcessor(function (error) {
+        testing.check(error, callback);
+        testing.success(callback);
+    });
+}
+
 /**
  * Run all tests.
  */
@@ -456,7 +473,8 @@ exports.test = function(callback)
         testEstimatorNewEntry,
         testEstimatorExistingEntryShouldUpdate,
         testEstimatorExistingEntryShouldUpdateAndDefer,
-        testEstimatorExistingEntryShouldNotUpdate
+        testEstimatorExistingEntryShouldNotUpdate,
+        testChunkProcessorUndefinedEstimation
     ], function() {
         db.close(function(error) {
             callback(error);
