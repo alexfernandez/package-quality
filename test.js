@@ -21,11 +21,16 @@ exports.test = function(callback)
 	log.debug('Running tests');
 	var tests = {};
 	var libs = ['estimation', 'db'];
+    var factors = ['issues'];
     var bin = ['all', 'update'];
 	libs.forEach(function(lib)
 	{
 		tests[lib] = require('./lib/' + lib + '.js').test;
 	});
+    factors.forEach(function(factor)
+    {
+        tests[factors] = require('./lib/factors/' + factor + '.js').test;
+    });
     bin.forEach(function(bin)
     {
         tests[bin] = require('./bin/' + bin + '.js').test;
