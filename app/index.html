@@ -16,20 +16,26 @@
 		<link rel="stylesheet" href="lib/flat-ui/css/flat-ui.min.css"/>
 	</head>
 
-	<body ng-controller="MainController" style="padding-top: 3em; padding-bottom: 3em">
+	<body ng-controller="MainController" style="padding-top: 3em; padding-bottom: 3em" class="container">
 
 		<!-- logo -->
 
 		<div class="row">
 			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1">
-				<img src="lib/flat-ui/img/icons/svg/retina.svg" alt="Package" style="display: block; margin: 1em auto"/>
+				<img src="img/logo.png" alt="Package" style="display: block; margin: 1em auto; height: 7em"/>
 			</div>
 		</div>
+
+		<!-- Fork me button -->
+
+		<a href="https://github.com/alexfernandez/package-quality" target="_blank" style="position: absolute; top: 0; right: 0" class="hidden-xs">
+			<img src="/img/forkme.png"/>
+		</a>
 
 		<!-- Search box -->
 
 		<div class="row">
-			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1 form-group">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1 form-group has-feedback">
 				<input ng-disabled="isLoadingPackage"
 					   type="text"
 					   ng-model="query"
@@ -39,18 +45,15 @@
 					   typeahead-wait-ms="1000"
 					   class="form-control"
 					   placeholder="Type a package name and press ENTER"/>
+				<span class="form-control-feedback" style="padding-right: 2.5em; color: #777" ng-show="isLoadingPackage">
+					<i class="fa fa-spinner fa-spin"></i>
+				</span>
 			</div>
 		</div>
 
 		<!-- Package stats -->
 
-		<div class="row" ng-if="isLoadingPackage">
-			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1" style="text-align: center; font-size: 3em; color: gray">
-				<i class="fa fa-spinner fa-spin"></i>
-			</div>
-		</div>
-
-		<div class="row" ng-if="!isLoadingPackage && package.query && package.notfound">
+		<div class="row" ng-if="package.notfound">
 			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1">
 				Package "{{ package.query }}" not found.
 			</div>
@@ -74,29 +77,27 @@
 				<p>{{ package.description }}</p>
 
 				<div style="margin: 1.5em 0">
+
+					<div>
+						Package quality
+						<span class="pull-right">
+							{{ ((package.quality || 0) * 100).toFixed(1) }}
+						</span>
+						<div class="progress">
+							<div class="progress-bar" style="width: {{ package.quality * 100}}%;"></div>
+						</div>
+					</div>
+
 					<div ng-repeat="metric in metrics">
 						{{ metric.label }}
 						<span class="pull-right">
-							{{ ((package[metric.key] || 0) * 100).toFixed(0) }}
+							{{ ((package[metric.key][0] || 0) * 100).toFixed(1) }}
 						</span>
 						<div class="progress">
-							<div class="progress-bar" style="width: {{ package[metric.key] * 100}}%;"></div>
+							<div class="progress-bar" style="width: {{ package[metric.key][0] * 100}}%;"></div>
 						</div>
 					</div>
 				</div>
-
-				<!--
-				<table style="width: 100%">
-					<tr ng-if="package.created" style="border-bottom: dashed 0.2em #ccc">
-						<td><b>Creation date</b></td>
-						<td style="text-align: right">{{ package.created | timeAgo : ['years', 'months', 'days'] }}</td>
-					</tr>
-					<tr ng-if="package.lastUpdated" style="border-bottom: dashed 0.2em #ccc">
-						<td><b>Last update date</b></td>
-						<td style="text-align: right">{{ package.lastUpdated | timeAgo : ['years', 'months', 'days'] }}</td>
-					</tr>
-				</table>
-				-->
 
 			</div>
 		</div>

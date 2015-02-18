@@ -103,7 +103,6 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	 **/
 	$scope.$on('$locationChangeSuccess', function () {
 		console.log('Location change! Arguments:', $location.search());
-		$scope['package'] = null;
 		$scope.query = $location.search()['package'];
 		if ($scope.query) {
 			loadPackage($location.search()['package']);
@@ -114,17 +113,20 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	 * Available metrics
 	 **/
 	$scope.metrics = [{
-		key: 'quality',
-		label: 'Package quality'
+		key: 'repoTotalIssues',
+		label: 'Total issues'
 	}, {
-		key: 'repoQuality',
-		label: 'Repo quality'
+		key: 'repoOpenIssues',
+		label: 'Open issues'
 	}, {
-		key: 'downloadsQuality',
-		label: 'Downloads quality'
+		key: 'repoLongOpenIssues',
+		label: 'Long open issues'
 	}, {
-		key: 'versionsQuality',
+		key: 'versions',
 		label: 'Versions quality'
+	}, {
+		key: 'downloads',
+		label: 'Downloads quality'
 	}];
 
 	/**
@@ -141,7 +143,6 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	 * Retrieve the package info through HTTP
 	 **/
 	function loadPackage(packageName) {
-		$scope['package'] = null;
 		$scope.isLoadingPackage = true;
 		packages.get(packageName, function (err, result) {
 			$scope.isLoadingPackage = false;
