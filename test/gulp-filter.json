@@ -1,0 +1,28 @@
+{
+    "name" : "gulp-filter",
+    "source" : "npm",
+    "created" : "2015-02-16T20:56:10+00:00",
+    "lastUpdated" : "2015-02-17T15:59:01+00:00",
+    "nextUpdate" : "2015-02-17T15:59:01+00:00",
+    "timesUpdated" : 1,
+    "repoTotalIssues" : [
+        "-Infinity",
+        1
+    ],
+    "repoOpenIssues" : [
+        1,
+        1
+    ],
+    "repoLongOpenIssues" : [
+        1,
+        1
+    ],
+    "versions" : [
+        0.9375,
+        1
+    ],
+    "downloads" : [
+        0.9999973556026845,
+        1
+    ]
+}
