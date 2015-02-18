@@ -32,3 +32,4 @@ all.json
 connect.sh
 local-config.js
 .tern-port
+*~
