@@ -26,39 +26,13 @@ var packagesCollection;
  * There are two constraints:
  *   - Github only allows 5000 requests per hour.
  *   - We should use config.limit to avoid RangeErrors in the stack size
- * @param offset[optional]: offset over the all.json file. Defaults to zero.
+ * @param all[required]: the object including the packages to update, preserving the all.json format.
  * @param callback[required]: a function(error, result) with the results of the process
  */
-exports.goOver = function(offset, callback)
+exports.goOver = function(all, callback)
 {
-    if (typeof offset === 'function') {
-        callback = offset;
-        offset = 0;
-    }
-    var all;
-    log.info('loading all.json...');
-    try
-    {
-        all = require('../all.json');
-        delete all._updated;
-    }
-    catch(exception)
-    {
-        return callback('Could not parse all.json: ' + exception);
-    }
-    log.info('all.json loaded');
     var names = Object.keys(all);
-    log.info('All packages: ' + names.length);
-    if (offset)
-    {
-        log.info('Offset ' + offset);
-        for (var i=0; i<offset; i++)
-        {
-            delete all[names.shift()];
-        }
-    }
     var numberOfPackages = names.length;
-    log.info('All packages after offset: ' + numberOfPackages);
     limit = (limit === null) || (numberOfPackages < limit) ? numberOfPackages : limit;
     var chunks = [];
     for (var j = 0; j < Math.ceil(numberOfPackages/limit); j++)
@@ -485,8 +459,33 @@ exports.test = function(callback)
 // run script if invoked directly
 if (__filename == process.argv[1])
 {
-    var offset = process.argv[2];
-    exports.goOver(offset, function(error, result)
+    var offset = process.argv[2] || 0;
+    var all;
+    // read all.json and apply offset
+    log.info('loading all.json...');
+    try
+    {
+        all = require('../all.json');
+        delete all._updated;
+    }
+    catch(exception)
+    {
+        log.error('Could not parse all.json: ' + exception);
+        process.exit(1);
+    }
+    log.info('all.json loaded');
+    var names = Object.keys(all);
+    log.info('All packages: ' + names.length);
+    if (offset)
+    {
+        log.info('Offset ' + offset);
+        for (var i=0; i<offset; i++)
+        {
+            delete all[names.shift()];
+        }
+    }
+    log.info('All packages after offset: ' + names.length);
+    exports.goOver(all, function(error, result)
     {
         if (error)
         {
