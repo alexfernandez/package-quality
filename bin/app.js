@@ -58,8 +58,14 @@ exports.stopServer = function(callback) {
 
 function serveBadge (request, response) {
 	var packageName = request.params['package'];
-	badges.compileBadge(packageName, (Math.random() * 10).toFixed(1), function (err, str) {
-		response.send('<img src="' + str + '"/>');
+	packagesCollection.findOne({name: packageName}, function(error, result) {
+		if (error || !result) {
+			delete result._id;
+			return response.status(403).send({error: 'package ' + packageName + ' not found.'});
+		}
+		badges.compileBadge(packageName, parseInt(result.quality * 100, 10), function (err, str) {
+			response.send('<img src="' + str + '"/>');
+		});
 	});
 }
 
