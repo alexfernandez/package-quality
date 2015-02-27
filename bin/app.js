@@ -11,6 +11,7 @@ var path = require('path');
 var config = require('../config.js');
 var express = require('express');
 var db = require('../lib/db.js');
+var badges = require('../lib/badges.js');
 var Log = require('log');
 
 // globals
@@ -32,6 +33,7 @@ exports.startServer = function(port, callback) {
 	// GET requests
 	app.get('/package/:package', serve);
 	app.get('/packages', servePackagesList);
+    app.get('/badge/:package', serveBadge);
 	// connect to database
 	db.addCallback(function(error, result) {
 		if (error) {
@@ -53,6 +55,13 @@ exports.stopServer = function(callback) {
 		callback(null);
 	});
 };
+
+function serveBadge (request, response) {
+	var packageName = request.params['package'];
+	badges.compileBadge(packageName, (Math.random() * 10).toFixed(1), function (err, str) {
+		response.send('<img src="' + str + '"/>');
+	});
+}
 
 function servePackagesList (request, response) {
 	packagesCollection.find({}, {name: true}).toArray(function(error, result) {

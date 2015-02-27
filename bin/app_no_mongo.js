@@ -11,6 +11,7 @@ require('prototypes');
 var path = require('path');
 var config = require('../config.js');
 var express = require('express');
+var badges = require('../lib/badges.js');
 var estimator = require('../lib/estimation.js');
 var Log = require('log');
 
@@ -33,6 +34,7 @@ exports.startServer = function(port, callback) {
     // GET requests
     app.get('/package/:package', serve);
     app.get('/packages', servePackagesList);
+    app.get('/badge/:package', serveBadge);
     // read all.json
     log.info('loading all.json...');
     try
@@ -64,6 +66,12 @@ function servePackagesList (request, response) {
 	response.send(packages);
 }
 
+function serveBadge (request, response) {
+	var packageName = request.params['package'];
+	badges.compileBadge(packageName, (Math.random() * 10).toFixed(1), function (err, str) {
+		response.send('<img src="' + str + '"/>');
+	});
+}
 function serve (request, response) {
     var npmPackage = request.params.package;
     var entry = all[npmPackage];
