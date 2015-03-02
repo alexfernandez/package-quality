@@ -24,7 +24,7 @@ exports.startServer = function(port, callback) {
     if (typeof port === 'function') {
         // no port
         callback = port;
-        port = config.expressPort;
+        port = config.noMongoExpressPort;
     }
     var app = express();
     // Static files

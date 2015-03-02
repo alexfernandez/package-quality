@@ -14,6 +14,7 @@ var log = new Log(exports.logLevel);
 
 exports.limit = 100;
 exports.expressPort = 8080;
+exports.noMongoExpressPort = 8080;
 exports.packagesCollection = 'packages';
 exports.mongoConnection = 'mongodb://localhost/quality?autoReconnect=true&connectTimeoutMS=5000';
 exports.testMongoConnection = 'mongodb://localhost/qualitytest?autoReconnect=true&connectTimeoutMS=5000';
