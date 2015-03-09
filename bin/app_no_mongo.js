@@ -11,6 +11,7 @@ require('prototypes');
 var path = require('path');
 var config = require('../config.js');
 var express = require('express');
+var requestLib = require('request');
 var badges = require('../lib/badges.js');
 var estimator = require('../lib/estimation.js');
 var Log = require('log');
@@ -18,7 +19,6 @@ var Log = require('log');
 // globals
 var log = new Log(config.logLevel);
 var server;
-var all;
 
 exports.startServer = function(port, callback) {
     if (typeof port === 'function') {
@@ -35,17 +35,6 @@ exports.startServer = function(port, callback) {
     app.get('/package/:package', serve);
     app.get('/packages', servePackagesList);
     app.get('/badge/:package', serveBadge);
-    // read all.json
-    log.info('loading all.json...');
-    try
-    {
-        all = require('../all.json');
-        delete all._updated;
-    }
-    catch(exception)
-    {
-        return callback('Could not parse all.json: ' + exception);
-    }
     // start server
     server = app.listen(port, callback);
 };
@@ -62,8 +51,8 @@ exports.stopServer = function(callback) {
 };
 
 function servePackagesList (request, response) {
-	var packages = Object.keys(all);
-	response.send(packages);
+	// no package list
+    response.send([]);
 }
 
 function serveBadge (request, response) {
@@ -74,40 +63,58 @@ function serveBadge (request, response) {
 }
 function serve (request, response) {
     var npmPackage = request.params.package;
-    var entry = all[npmPackage];
-    if (!entry)
-    {
-        return response.status(403).send({error: 'package ' + npmPackage + ' not found.'});
-    }
-    estimator.estimate(entry, function(error, estimation)
+    var registryUrl = 'http://registry.npmjs.org/' + npmPackage;
+    log.debug('Requesting info for package: %s', npmPackage);
+    requestLib.get(registryUrl, function(error, getResponse, body)
     {
         if (error)
         {
             return response.status(403).send(error);
         }
-        // remove non-factor fields
-        delete estimation.created;
-        delete estimation.githubApiRemainingCalls;
-        delete estimation.githubApiResetLimit;
-        delete estimation.lastUpdated;
-        delete estimation.name;
-        delete estimation.nextUpdate;
-        delete estimation.source;
-        delete estimation.timesUpdated;
-        // pending??
-        if (estimation.pending)
+        var registryResponse;
+        try
         {
-            estimator.pending(estimation.pending, function (error, pendingEstimation)
+            registryResponse = JSON.parse(body);
+        }
+        catch(exception)
+        {
+            return response.status(403).send({error: 'package ' + npmPackage + ' not valid.'});
+        }
+        var entry = {
+            name: registryResponse.name,
+            repository: registryResponse.repository,
+            description: registryResponse.description
+        };
+        estimator.estimate(entry, function(error, estimation)
+        {
+            if (error)
             {
-                delete pendingEstimation.githubApiRemainingCalls;
-                delete pendingEstimation.githubApiResetLimit;
-                delete estimation.pending;
-                return response.jsonp(estimator.addQuality(estimation.concat(pendingEstimation)));
-            });
-        }
-        else
-        {
-            return response.jsonp(estimator.addQuality(estimation));
-        }
+                return response.status(403).send(error);
+            }
+            // remove non-factor fields
+            delete estimation.created;
+            delete estimation.githubApiRemainingCalls;
+            delete estimation.githubApiResetLimit;
+            delete estimation.lastUpdated;
+            delete estimation.name;
+            delete estimation.nextUpdate;
+            delete estimation.source;
+            delete estimation.timesUpdated;
+            // pending??
+            if (estimation.pending)
+            {
+                estimator.pending(estimation.pending, function (error, pendingEstimation)
+                {
+                    delete pendingEstimation.githubApiRemainingCalls;
+                    delete pendingEstimation.githubApiResetLimit;
+                    delete estimation.pending;
+                    return response.jsonp(estimator.addQuality(estimation.concat(pendingEstimation)));
+                });
+            }
+            else
+            {
+                return response.jsonp(estimator.addQuality(estimation));
+            }
+        });
     });
 }
