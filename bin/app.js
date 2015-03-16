@@ -57,7 +57,7 @@ exports.stopServer = function(callback) {
 };
 
 function serveBadge (request, response) {
-	var packageName = request.params['package'];
+	var packageName = request.params['package'].replace(/.png$/, '');
 	packagesCollection.findOne({name: packageName}, function(error, result) {
 		if (error || !result) {
 			delete result._id;
