@@ -1,0 +1,9 @@
+server {
+	listen 80;
+	server_name packagequality.com;
+	access_log /var/log/nginx/packagequality.com-access.log;
+	error_log /var/log/nginx/packagequality.com-error.log;
+	location / {
+		proxy_pass http://127.0.0.1:8080;
+	}
+}
