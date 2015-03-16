@@ -102,6 +102,19 @@
 			</div>
 		</div>
 
+		<div class="row" ng-if="package">
+			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1">
+				<h5>
+					Share this package
+				</h5>
+				<p>
+					Use the following HTML snippet to share this package quality:
+				</p>
+				<pre>{{ genBadgeMarkup(package) }}</pre>
+				<img ng-src="{{ genBadgeUrl(package) }}" style="display:block; margin:auto"/>
+			</div>
+		</div>
+
 		<div class="row" ng-if="DEBUG && package">
 			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1">
 				<h6>Debug info</h6>

@@ -57,8 +57,8 @@ function servePackagesList (request, response) {
 
 function serveBadge (request, response) {
 	var packageName = request.params['package'];
-	badges.compileBadge(packageName, (Math.random() * 10).toFixed(1), function (err, str) {
-		response.send('<img src="' + str + '"/>');
+	badges.compileBadge(packageName, (Math.random() * 10).toFixed(1), function (err, png) {
+		response.send(png);
 	});
 }
 function serve (request, response) {

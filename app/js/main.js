@@ -171,4 +171,14 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 		}
 		$location.search(args);
 	};
+
+	/**
+	 * Badges
+	 **/
+	$scope.genBadgeUrl = function (pkg) {
+		return '/badge/' + pkg.name;
+	};
+	$scope.genBadgeMarkup = function (pkg) {
+		return '<img src="' + pkg.name + '"/>';
+	};
 }]);
