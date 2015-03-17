@@ -63,7 +63,7 @@ function serveBadge (request, response) {
 			delete result._id;
 			return response.status(403).send({error: 'package ' + packageName + ' not found.'});
 		}
-		badges.compileBadge(packageName, parseInt(result.quality * 100, 10), function (err, png) {
+		badges.compileBadge(packageName, (result.quality * 100).toFixed(2), function (err, png) {
 			response.send(png);
 		});
 	});
