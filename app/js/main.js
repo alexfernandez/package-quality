@@ -130,16 +130,6 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	}];
 
 	/**
-	 * Stars auxiliar functions
-	 **/
-	$scope.genArray = function (count) {
-		return new Array(count);
-	};
-	$scope.getStars = function (pack) {
-		return Math.floor(pack.quality * 5);
-	};
-
-	/**
 	 * Retrieve the package info through HTTP
 	 **/
 	function loadPackage(packageName) {

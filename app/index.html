@@ -61,13 +61,18 @@
 
 		<div class="row" ng-if="package && !package.notfound" style="padding-bottom: 1em">
 			<div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-10 col-xs-offset-1">
-
+				<!--
+				<input type="range" ng-model="package.quality" min="0" max="1" step="0.01"/>
+				-->
 				<div style="margin-bottom: 0.5em">
 					<h4 style="margin-bottom: 0">
 						{{ package.name }}
 						<span class="pull-right" style="font-size: smaller">
-							<span class="fui-star-2" ng-repeat="i in genArray(getStars(package)) track by $index"></span>
-							<span class="fui-star-2" style="color: #ccc" ng-repeat="i in genArray(5 - getStars(package)) track by $index"></span>
+							<span ng-repeat="range in [[0, 10], [25, 40], [50, 60], [70, 80], [90, 95]]">
+								<span class="fa fa-star-o" ng-if="package.quality * 100 < range[0]"></span>
+								<span class="fa fa-star-half-empty" ng-if="package.quality * 100 >= range[0] && package.quality * 100 <= range[1]"></span>
+								<span class="fa fa-star" ng-if="package.quality * 100 > range[1]"></span>
+							</span>
 						</span>
 					</h4>
 					<h7>
