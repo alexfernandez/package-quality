@@ -64,6 +64,7 @@ function serveBadge (request, response) {
 			return response.status(403).send({error: 'package ' + packageName + ' not found.'});
 		}
 		badges.compileBadge(packageName, (result.quality * 100).toFixed(2), function (err, png) {
+			response.setHeader('Content-type', 'image/x-png');
 			response.send(png);
 		});
 	});
