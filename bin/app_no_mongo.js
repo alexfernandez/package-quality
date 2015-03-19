@@ -122,7 +122,7 @@ function serve (request, response) {
 // run if invoked directly
 if (__filename == process.argv[1])
 {
-	exports.startServer(function(error)
+	exports.startServer(8080, function(error)
 	{
 		if (error)
 		{
