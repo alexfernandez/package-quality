@@ -94,3 +94,15 @@ function serve (request, response) {
 	});
 }
 
+// run if invoked directly
+if (__filename == process.argv[1])
+{
+	exports.startServer(function(error)
+	{
+		if (error)
+		{
+			log.error('Could not start server: %s', error);
+		}
+	});
+}
+
