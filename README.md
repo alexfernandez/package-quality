@@ -20,6 +20,13 @@ Or, in HTML markup:
 
 ## Measuring Quality
 
+Any objective measurements of quality are going to be flawed one way or another.
+`package-quality` only attempts to give some indications about quality,
+not be an absolute rating on which to bet your farm.
+If you don't agree with our ratings, please [help us improve them](https://github.com/alexfernandez/package-quality/pulls)!
+
+### Algorithm
+
 The following factors are considered when calculating the quality of a package:
   - Versions quality (v): the more versions a package has, the more quality it is. We calculate v as ```v=1-1/total_number_of_versions```
   - Downloads quality (d): the more downloads a package has, the more quality is it. We calculate d as ```d=1-1/number_of_downloads_last_year```
@@ -28,9 +35,9 @@ The following factors are considered when calculating the quality of a package:
     - Open factor (ro): we consider "healthy" to have a 20% of open issues in your repo (20% of the total number of issues). Those packages with 20% or less open issues will have ```ro=1```. For those with more than 20%, ```ro=1.2-open_issues/total_number_of_issues```
     - Long open factor (rlo): we consider long open issues those who have been open more that 1 year and are still open today. This factor is calculated as ```rlo=1-long_open_issues/total_number_of_issues```. If a package has no open issues, then ```rlo=1```.
 
-The repo quality r is calculated as the average of rt, ro and rlo: ```r=(rt+ro+rlo)/3```
+The repo quality r is calculated as the average of rt, ro and rlo: ```r=(rt+ro+rlo)/3```.
 
-The overall quality of a package is ```q=v*d*r```
+The overall quality of a package is ```q=v*d*r```.
 
 ### How to Understand Star Ratings
 
