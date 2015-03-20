@@ -32,6 +32,10 @@ The repo quality r is calculated as the average of rt, ro and rlo: ```r=(rt+ro+r
 
 The overall quality of a package is ```q=v*d*r```
 
+### How to Understand Star Ratings
+
+[![By xkcd](http://imgs.xkcd.com/comics/star_ratings.png)](http://xkcd.com/1098/)
+
 ### Other Repos
 
 Right now the quality is computed only for npm packages.
