@@ -68,7 +68,7 @@
 					<h4 style="margin-bottom: 0">
 						{{ package.name }}
 						<span class="pull-right" style="font-size: smaller">
-							<span ng-repeat="range in [[12, 25], [37, 50], [62, 75], [87, 99], [100, 100]]">
+							<span ng-repeat="range in [[1, 12], [25, 37], [50, 62], [75, 87], [99, 100]]">
 								<span class="fa fa-star-o" ng-if="package.quality * 100 < range[0]"></span>
 								<span class="fa fa-star-half-empty" ng-if="package.quality * 100 >= range[0] && package.quality * 100 <= range[1]"></span>
 								<span class="fa fa-star" ng-if="package.quality * 100 > range[1]"></span>
