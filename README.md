@@ -45,7 +45,7 @@ The overall quality of a package is ```q=v*d*r```.
 
 [![By xkcd](http://imgs.xkcd.com/comics/star_ratings.png)](http://xkcd.com/1098/)
 
-### Other Repos
+### Other Package Managers
 
 Right now the quality is computed only for npm packages.
 But it is trivial to extend the ratings to other package managers,
@@ -59,6 +59,17 @@ you just need:
 * and some way to get the downloads per year.
 
 [Let us know](mailto:alexfernandeznpm@gmail.com) and we will set up a new subdomain.
+
+## Help Wanted
+
+The following areas are a work in progress:
+
+* Improve the existing ratings.
+* Take other parameters into account, such as a working or broken Travis-CI build.
+* Extend to other package managers (see above).
+* Just let us know what you don't like about our project.
+
+[Just send mail](mailto:alexfernandeznpm@gmail.com) or, even better, a pull request.
 
 ## License (The MIT License)
 
