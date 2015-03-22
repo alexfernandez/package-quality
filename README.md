@@ -9,14 +9,16 @@ Measurements of quality for packages, initially for npm.
 To show the quality of your npm package, just add this image to your GitHub README:
 
 ```
-[![Package quality](http://packagequality.com/badge/package-quality.png)](http://packagequality.com/#?package=package-quality)
+[![Package quality](http://packagequality.com/badge/yourpackage.png)](http://packagequality.com/#?package=yourpackage)
 ```
 
 Or, in HTML markup:
 
 ```
-<a href="http://packagequality.com/#?package=package-quality"><img src="http://packagequality.com/badge/package-quality.png"/></a>
+<a href="http://packagequality.com/#?package=yourpackage"><img src="http://packagequality.com/badge/yourpackage.png"/></a>
 ```
+
+replacing `yourpackage` with (surprise!) the name of your package.
 
 ## Measuring Quality
 
