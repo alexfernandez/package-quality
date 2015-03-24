@@ -9,14 +9,16 @@ Measurements of quality for packages, initially for npm.
 To show the quality of your npm package, just add this image to your GitHub README:
 
 ```
-[![Package quality](http://packagequality.com/badge/package-quality.png)](http://packagequality.com/#?package=package-quality)
+[![Package quality](http://packagequality.com/badge/yourpackage.png)](http://packagequality.com/#?package=yourpackage)
 ```
 
 Or, in HTML markup:
 
 ```
-<a href="http://packagequality.com/#?package=package-quality"><img src="http://packagequality.com/badge/package-quality.png"/></a>
+<a href="http://packagequality.com/#?package=yourpackage"><img src="http://packagequality.com/badge/yourpackage.png"/></a>
 ```
+
+replacing `yourpackage` with (surprise!) the name of your package.
 
 ## Measuring Quality
 
@@ -43,7 +45,7 @@ The overall quality of a package is ```q=v*d*r```.
 
 [![By xkcd](http://imgs.xkcd.com/comics/star_ratings.png)](http://xkcd.com/1098/)
 
-### Other Repos
+### Other Package Managers
 
 Right now the quality is computed only for npm packages.
 But it is trivial to extend the ratings to other package managers,
@@ -57,6 +59,17 @@ you just need:
 * and some way to get the downloads per year.
 
 [Let us know](mailto:alexfernandeznpm@gmail.com) and we will set up a new subdomain.
+
+## Help Wanted
+
+The following areas are a work in progress:
+
+* Improve the existing ratings.
+* Take other parameters into account, such as a working or broken Travis-CI build.
+* Extend to other package managers (see above).
+* Just let us know what you don't like about our project.
+
+[Just send mail](mailto:alexfernandeznpm@gmail.com) or, even better, a pull request.
 
 ## License (The MIT License)
 
