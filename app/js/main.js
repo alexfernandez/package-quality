@@ -163,6 +163,17 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	};
 
 	/**
+	 * URLs
+	 **/
+	$scope.packageUrl = function (pkg) {
+		if (pkg.source !== 'npm') {
+			return false;
+		}
+
+		return 'https://www.npmjs.com/package/' + pkg.name;
+	};
+
+	/**
 	 * Badges
 	 **/
 	$scope.genBadgeUrl = function (pkg) {
