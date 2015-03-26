@@ -193,7 +193,7 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	$scope.genBadgeUrl = function (pkg) {
 		return 'http://' + pkg.source + '.packagequality.com/badge/' + pkg.name + '.png';
 	};
-	$scope.genBadgeMarkup = function (pkg) {
+	$scope.genBadgeHTMLMarkup = function (pkg) {
 		return '<img src="' + $scope.genBadgeUrl(pkg) + '"/>';
 	};
 }]);
