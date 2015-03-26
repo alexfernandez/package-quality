@@ -179,6 +179,7 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	/**
 	 * URLs
 	 **/
+	// TODO: this should be a property on the package
 	$scope.siteUrl = function (pkg) {
 		return 'http://packagequality.com/#?package=' + pkg.name;
 	};
@@ -193,8 +194,9 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	/**
 	 * Badges
 	 **/
+	// TODO: this should probably be generated on the backend and passed down as a property
 	$scope.genBadgeUrl = function (pkg) {
-		return 'http://' + pkg.source + '.packagequality.com/badge/' + pkg.name + '.png';
+		return ['http://', pkg.source, '.packagequality.com/badge/', pkg.name, '.png'].join('');
 	};
 	$scope.shareFormats = [
 		{
@@ -203,17 +205,17 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 		}, {
 			title: 'HTML',
 			markup: function (pkg) {
-				return '<img src="' + $scope.genBadgeUrl(pkg) + '"/>';
+				return ['<img src="', $scope.genBadgeUrl(pkg), '"/>'].join('');
 			}
 		}, {
 			title: 'Markdown',
 			markup: function (pkg) {
-				return '[![Package Quality](' + $scope.genBadgeUrl(pkg) + ')](' + $scope.siteUrl(pkg) + ')';
+				return ['[![Package Quality](', $scope.genBadgeUrl(pkg), ')](', $scope.siteUrl(pkg), ')'].join('');
 			}
 		}, {
 			title: 'Textile',
 			markup: function (pkg) {
-				return '!' + $scope.genBadgeUrl(pkg) + '!:' + $scope.siteUrl(pkg);
+				return ['!', $scope.genBadgeUrl(pkg), '!:', $scope.siteUrl(pkg)].join('');
 			}
 		}
 	];
