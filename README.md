@@ -2,7 +2,7 @@
 
 # package-quality
 
-Measurements of quality for packages, initially for npm.
+Measurements of quality for packages, [initially for npm](http://npm.packagequality.com/).
 
 ## Add Your Badge
 
@@ -73,7 +73,7 @@ The following areas are a work in progress:
 
 ## License (The MIT License)
 
-Copyright (c) 2014,2015 Alex Fernández <alexfernandeznpm@gmail.com>,
+Copyright (c) 2014-2015 Alex Fernández <alexfernandeznpm@gmail.com>,
 [Diego Lafuente](https://github.com/tufosa),
 Sergio García Mondaray <sgmonda@gmail.com>
 and [contributors](https://github.com/alexfernandez/package-quality/graphs/contributors).
