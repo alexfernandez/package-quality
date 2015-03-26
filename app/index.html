@@ -75,9 +75,8 @@
 							</span>
 						</span>
 					</h4>
-					<h7>
-						Package from <b>{{ package.source }}</b>
-					</h7>
+					<h7 ng-if="!packageUrl(package)">Package from <b>{{ package.source }}</b></h7>
+					<h7 ng-if="packageUrl(package)">Package from <a ng-href="{{ packageUrl(package) }}"><b>{{ package.source }}</b></a></h7>
 				</div>
 				<p>{{ package.description }}</p>
 
