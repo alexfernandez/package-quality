@@ -196,13 +196,25 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	$scope.genBadgeUrl = function (pkg) {
 		return 'http://' + pkg.source + '.packagequality.com/badge/' + pkg.name + '.png';
 	};
-	$scope.genBadgeHTMLMarkup = function (pkg) {
-		return '<img src="' + $scope.genBadgeUrl(pkg) + '"/>';
-	};
-	$scope.genBadgeMarkdownMarkup = function (pkg) {
-		return '[![Package Quality](' + $scope.genBadgeUrl(pkg) + ')](' + $scope.siteUrl(pkg) + ')';
-	};
-	$scope.genBadgeTextileMarkup = function (pkg) {
-		return '!' + $scope.genBadgeUrl(pkg) + '!:' + $scope.siteUrl(pkg);
-	};
+	$scope.shareFormats = [
+		{
+			title: 'Image',
+			markup: $scope.genBadgeUrl
+		}, {
+			title: 'HTML',
+			markup: function (pkg) {
+				return '<img src="' + $scope.genBadgeUrl(pkg) + '"/>';
+			}
+		}, {
+			title: 'Markdown',
+			markup: function (pkg) {
+				return '[![Package Quality](' + $scope.genBadgeUrl(pkg) + ')](' + $scope.siteUrl(pkg) + ')';
+			}
+		}, {
+			title: 'Textile',
+			markup: function (pkg) {
+				return '!' + $scope.genBadgeUrl(pkg) + '!:' + $scope.siteUrl(pkg);
+			}
+		}
+	];
 }]);

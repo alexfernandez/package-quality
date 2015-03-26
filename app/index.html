@@ -118,25 +118,10 @@
 
 				<hr>
 
-				<small>
-					Image:
-				</small>
-				<input readonly ng-value="genBadgeUrl(package)" select-on-click/>
-
-				<small>
-					HTML:
-				</small>
-				<input readonly ng-value="genBadgeHTMLMarkup(package)" select-on-click/>
-
-				<small>
-					Markdown:
-				</small>
-				<input readonly ng-value="genBadgeMarkdownMarkup(package)" select-on-click/>
-
-				<small>
-					Textile:
-				</small>
-				<input readonly ng-value="genBadgeTextileMarkup(package)" select-on-click/>
+				<div ng-repeat="format in shareFormats">
+					<small ng-bind="format.title"></small>
+					<input readonly ng-value="format.markup(package)" select-on-click/>
+				</div>
 			</div>
 		</div>
 
