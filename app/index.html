@@ -112,10 +112,16 @@
 					Share this package
 				</h5>
 				<p>
-					Use the following HTML snippet to share this package quality:
+					Use the following snippet to share this package quality:
 				</p>
-				<pre>{{ genBadgeMarkup(package) }}</pre>
 				<img ng-src="{{ genBadgeUrl(package) }}"/>
+
+				<hr>
+
+				<small>
+					HTML:
+				</small>
+				<input readonly ng-value="genBadgeMarkup(package)" select-on-click/>
 			</div>
 		</div>
 
