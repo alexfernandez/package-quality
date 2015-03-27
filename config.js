@@ -20,6 +20,8 @@ exports.mongoConnection = 'mongodb://localhost/quality?autoReconnect=true&connec
 exports.testMongoConnection = 'mongodb://localhost/qualitytest?autoReconnect=true&connectTimeoutMS=5000';
 exports.githubToken = '';
 
+exports.packageExpiration = 24*60*60;
+
 try {
     var localConfig = require('./local-config.js');
     for (var key in localConfig) {
