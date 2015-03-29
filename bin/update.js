@@ -70,7 +70,7 @@ function getEstimator(entry)
     {
         var name = entry.name;
         var now = moment();
-        packages.findPackage(name, function (error, item)
+        packages.find(name, function (error, item)
         {
             var isNewEntry = error || !item;
             var shouldUpdate = isNewEntry || (moment(item.nextUpdate) < now);
@@ -197,7 +197,7 @@ function processUpdates(estimations, callback)
     {
         updatesStream.push(function (callback)
         {
-			packages.updatePackage(estimation, function(error)
+			packages.update(estimation, function(error)
             {
                 if (error)
                 {
@@ -230,7 +230,7 @@ function processPendings(pendings, githubApiRemainingCalls, githubApiResetLimit,
                     delete pendingEstimation.githubApiRemainingCalls;
                     delete pendingEstimation.githubApiResetLimit;
                     var finalEstimation = estimator.addQuality(pendingItem.previousEstimation.concat(pendingEstimation));
-                    packages.updatePackage(finalEstimation, function(error)
+                    packages.update(finalEstimation, function(error)
                     {
                         if (error)
                         {
@@ -299,7 +299,7 @@ function testEstimatorNewEntry(callback)
     var object = {
 		name: newEntry.name,
     };
-	packages.updatePackage(object, function(error)
+	packages.update(object, function(error)
 	{
 		testing.check(error, 'Could not update package', callback);
 		var theEstimator = getEstimator(newEntry);
@@ -375,7 +375,7 @@ function testEstimatorExistingEntryShouldUpdateAndDefer(callback)
 		nextUpdate: moment(now).subtract(1, 'second').format(),
 		timesUpdated: 12,
 	};
-	packages.updatePackage(object, function(error)
+	packages.update(object, function(error)
 	{
 		testing.check(error, 'Could not update package', callback);
 		var theEstimator = getEstimator(existingEntry);
@@ -404,7 +404,7 @@ function testEstimatorExistingEntryShouldNotUpdate(callback)
 		name: existingEntry.name,
 		nextUpdate: moment(now).add(1, 'second').format(),
 	};
-	packages.updatePackage(object, function(error)
+	packages.update(object, function(error)
 	{
 		testing.check(error, 'Could not update package', callback);
 		var theEstimator = getEstimator(existingEntry);

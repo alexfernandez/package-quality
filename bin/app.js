@@ -52,7 +52,7 @@ exports.stopServer = function(callback) {
 
 function serveBadge (request, response) {
 	var packageName = request.params['package'].replace(/.png$/, '');
-	packages.findPackage(packageName, function(error, result) {
+	packages.find(packageName, function(error, result) {
 		if (error) {
 			return response.status(503).send({error: 'database not available'});
 		}
@@ -68,7 +68,7 @@ function serveBadge (request, response) {
 
 function serveShield(request, response) {
 	var packageName = request.params['package'].substringUpTo('.');
-	packages.findPackage(packageName, function(error, result) {
+	packages.find(packageName, function(error, result) {
 		if (error)
 		{
 			return response.status(503).send({error: 'database not available'});
@@ -99,7 +99,7 @@ function servePackagesList (request, response) {
 
 function serve (request, response) {
 	var npmPackage = request.params.package;
-	packages.findPackage(npmPackage, function(error, result) {
+	packages.find(npmPackage, function(error, result) {
 		if (error) {
 			return response.status(503).send({error: 'database not available'});
 		}
