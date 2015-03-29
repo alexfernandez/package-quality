@@ -21,6 +21,7 @@
 		"express": "*",
 		"grunt": "*",
 		"canvas": "*",
+		"basic-request": "*",
     	"grunt-contrib-jshint": "*"
 	},
 	"keywords" : ["package", "quality", "measurement", "package quality", "estimation", "npm", "registry", "npm registry"],
