@@ -23,7 +23,6 @@ var log = new Log(config.logLevel);
 var packagesCollection;
 var updateCollection;
 var server;
-var githubApiRemainingCalls = 9999999;
 
 exports.startServer = function(port, callback) {
 	if (typeof port === 'function') {
@@ -104,7 +103,7 @@ function serve (request, response) {
 			if (!result) {
 				return callback('package ' + npmPackage + ' not found.');
 			}
-			return callback(error, result);
+			return callback(null, result);
 		});
 	});
 	// find the package in mongo
@@ -113,7 +112,7 @@ function serve (request, response) {
 			if (error || !dbRecord) {
 				// not found, add it to the update collection and go to next step
 				updateCollection.update({name: entry.name}, {'$set':entry}, {upsert: true});
-				return callback(null, entry, dbRecord, /*stop?*/ false););
+				return callback(null, entry, dbRecord, /*stop?*/ false);
 			}
 			// package found, check if expired
 			var now = moment();
@@ -127,27 +126,23 @@ function serve (request, response) {
 		});
 	});
 	// estimate quality or return
-	mainStream.push(function (entry, dbRecord, stop, callback) {
+	mainStream.push(function (entry, result, stop, callback) {
 		// stop?
 		if (stop) {
-			return callback(null, entry, dbRecord, stop);
-		}
-		// check if githubApiRemainingCalls is zero
-		if (githubApiRemainingCalls === 0) {
-			if (dbRecord)
+			return callback(null, entry, result, stop);
 		}
 		// estimate
 		estimator.estimate(entry, function(error, estimation)
         {
             if (error) {
-                //return dbRecord if it exists, the error otherwise
-                if (dbRecord) {
-                	return callback((null, entry, dbRecord, /*stop*/ true);
+            	// at least one factor returned an error. Add entry to the updateCollection
+            	updateCollection.update({name: entry.name}, {'$set':entry}, {upsert: true});
+                // return result if it exists, the error otherwise
+                if (result) {
+                	return callback(null, entry, result, /*stop*/ true);
                 }
                 return callback(error);
             }
-            // update githubApiRemainingCalls
-            githubApiRemainingCalls = estimation.githubApiRemainingCalls;
             // remove non-factor fields
             delete estimation.created;
             delete estimation.githubApiRemainingCalls;
@@ -157,25 +152,12 @@ function serve (request, response) {
             delete estimation.nextUpdate;
             delete estimation.source;
             delete estimation.timesUpdated;
-            // pending??
-            if (estimation.pending)
-            {
-                estimator.pending(estimation.pending, function (error, pendingEstimation)
-                {
-                    delete pendingEstimation.githubApiRemainingCalls;
-                    delete pendingEstimation.githubApiResetLimit;
-                    delete estimation.pending;
-                    return response.jsonp(estimator.addQuality(estimation.concat(pendingEstimation)));
-                });
-            }
-            else
-            {
-                return response.jsonp(estimator.addQuality(estimation));
-            }
+            
+            return callback(null, entry, estimator.addQuality(estimation));
         });
 	});
 	// run mainStream
-	async.waterfall(mainStream, function(error, result) {
+	async.waterfall(mainStream, function(error, entry, result) {
 		if (error) {
 			return response.status(403).send({error: error});
 		}
