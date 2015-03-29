@@ -9,7 +9,7 @@
 // requires
 require('prototypes');
 var config = require('../config.js');
-var db = require('../lib/db.js');
+var packages = require('../lib/packages.js');
 var estimator = require('../lib/estimation.js');
 var async = require('async');
 var moment = require('moment');
@@ -19,7 +19,6 @@ var testing = require('testing');
 // globals
 var log = new Log(config.logLevel);
 var limit = config.limit;
-var packagesCollection;
 
 /**
  * Go over all the packages in all.json and update mongo if required.
@@ -31,45 +30,38 @@ var packagesCollection;
  */
 exports.goOver = function(all, callback)
 {
-    var names = Object.keys(all);
-    var numberOfPackages = names.length;
-    limit = (limit === null) || (numberOfPackages < limit) ? numberOfPackages : limit;
-    var chunks = [];
-    for (var j = 0; j < Math.ceil(numberOfPackages/limit); j++)
-    {
-        chunks.push([]);
-    }
-    var packageCount = 0;
-    for (var name in all)
-    {
-        var entry = all[name];
-        var index = Math.floor(packageCount/limit);
-        chunks[index].push(getEstimator(entry));
-        packageCount++;
-        delete all[name];
-    }
-    log.debug('number of chunks: ' + chunks.length);
-    db.addCallback(function(error, result)
-    {
-        if (error) {
-            return callback(error);
-        }
-        packagesCollection = result.collection(config.packagesCollection);
-        var series = [];
-        while (chunks.length)
-        {
-            series.push(getChunkProcessor(chunks.shift()));
-        }
-        log.debug('series has length ' + series.length);
-        async.series(series, function(error)
-        {
-            if (error)
-            {
-                callback(error);
-            }
-            callback(null, series.length);
-        });
-    });
+	var names = Object.keys(all);
+	var numberOfPackages = names.length;
+	limit = (limit === null) || (numberOfPackages < limit) ? numberOfPackages : limit;
+	var chunks = [];
+	for (var j = 0; j < Math.ceil(numberOfPackages/limit); j++)
+	{
+		chunks.push([]);
+	}
+	var packageCount = 0;
+	for (var name in all)
+	{
+		var entry = all[name];
+		var index = Math.floor(packageCount/limit);
+		chunks[index].push(getEstimator(entry));
+		packageCount++;
+		delete all[name];
+	}
+	log.debug('number of chunks: ' + chunks.length);
+	var series = [];
+	while (chunks.length)
+	{
+		series.push(getChunkProcessor(chunks.shift()));
+	}
+	log.debug('series has length ' + series.length);
+	async.series(series, function(error)
+	{
+		if (error)
+		{
+			callback(error);
+		}
+		callback(null, series.length);
+	});
 };
 
 function getEstimator(entry)
@@ -78,7 +70,7 @@ function getEstimator(entry)
     {
         var name = entry.name;
         var now = moment();
-        packagesCollection.findOne({name: name}, function (error, item)
+        packages.findPackage(name, function (error, item)
         {
             var isNewEntry = error || !item;
             var shouldUpdate = isNewEntry || (moment(item.nextUpdate) < now);
@@ -205,7 +197,7 @@ function processUpdates(estimations, callback)
     {
         updatesStream.push(function (callback)
         {
-            packagesCollection.update({name: estimation.name}, {'$set':estimation}, {upsert: true}, function(error)
+			packages.updatePackage(estimation, function(error)
             {
                 if (error)
                 {
@@ -238,7 +230,7 @@ function processPendings(pendings, githubApiRemainingCalls, githubApiResetLimit,
                     delete pendingEstimation.githubApiRemainingCalls;
                     delete pendingEstimation.githubApiResetLimit;
                     var finalEstimation = estimator.addQuality(pendingItem.previousEstimation.concat(pendingEstimation));
-                    packagesCollection.update({name: finalEstimation.name}, {'$set':finalEstimation}, {upsert: true}, function(error)
+                    packages.updatePackage(finalEstimation, function(error)
                     {
                         if (error)
                         {
@@ -304,21 +296,22 @@ function testEstimatorNewEntry(callback)
             });
         }
     };
-    packagesCollection = {
-        findOne: function(query, internalCallback) {
-            testing.assertEquals(query.name, newEntry.name, 'wrong name passed to findOne', callback);
-            return internalCallback(true);
-        }
+    var object = {
+		name: newEntry.name,
     };
-    var theEstimator = getEstimator(newEntry);
-    theEstimator(function(error, estimation) {
-        testing.check(error, callback);
-        testing.assertEquals(estimation.name, newEntry.name, 'wrong name returned by the estimator', callback);
-        testing.assertEquals(estimation.created, now, 'wrong created returned by the estimator', callback);
-        testing.assertEquals(estimation.nextUpdate, nextUpdate, 'wrong nextUpdate returned by the estimator', callback);
-        testing.assertEquals(estimation.timesUpdated, 0, 'wrong timesUpdated returned by the estimator', callback);
-        testing.success(callback);
-    });
+	packages.updatePackage(object, function(error)
+	{
+		testing.check(error, 'Could not update package', callback);
+		var theEstimator = getEstimator(newEntry);
+		theEstimator(function(error, estimation) {
+			testing.check(error, callback);
+			testing.assertEquals(estimation.name, newEntry.name, 'wrong name returned by the estimator', callback);
+			testing.assertEquals(estimation.created, now, 'wrong created returned by the estimator', callback);
+			testing.assertEquals(estimation.nextUpdate, nextUpdate, 'wrong nextUpdate returned by the estimator', callback);
+			testing.assertEquals(estimation.timesUpdated, 0, 'wrong timesUpdated returned by the estimator', callback);
+			testing.success(callback);
+		});
+	});
 }
 
 function testEstimatorExistingEntryShouldUpdate(callback)
@@ -338,25 +331,24 @@ function testEstimatorExistingEntryShouldUpdate(callback)
             });
         }
     };
-    packagesCollection = {
-        findOne: function(query, internalCallback) {
-            testing.assertEquals(query.name, existingEntry.name, 'wrong name passed to findOne', callback);
-            return internalCallback(null, {
-                name: query.name,
-                nextUpdate: moment(now).subtract(1, 'second').format(),
-                timesUpdated: 7
-            });
-        }
-    };
-    var theEstimator = getEstimator(existingEntry);
-    theEstimator(function(error, estimation) {
-        testing.check(error, callback);
-        testing.assertEquals(estimation.name, existingEntry.name, 'wrong name returned by the estimator', callback);
-        testing.check(estimation.created, 'created should be deleted in existing entries', callback);
-        testing.assertEquals(estimation.nextUpdate, nextUpdate, 'wrong nextUpdate returned by the estimator', callback);
-        testing.assertEquals(estimation.timesUpdated, 8, 'wrong timesUpdated returned by the estimator', callback);
-        testing.success(callback);
-    });
+	var object = {
+		name: existingEntry.name,
+		nextUpdate: moment(now).subtract(1, 'second').format(),
+		timesUpdated: 7,
+	};
+	packages.update(object, function(error)
+	{
+		testing.check(error, 'Could not update package', callback);
+		var theEstimator = getEstimator(existingEntry);
+		theEstimator(function(error, estimation) {
+			testing.check(error, callback);
+			testing.assertEquals(estimation.name, existingEntry.name, 'wrong name returned by the estimator', callback);
+			testing.check(estimation.created, 'created should be deleted in existing entries', callback);
+			testing.assertEquals(estimation.nextUpdate, nextUpdate, 'wrong nextUpdate returned by the estimator', callback);
+			testing.assertEquals(estimation.timesUpdated, 8, 'wrong timesUpdated returned by the estimator', callback);
+			testing.success(callback);
+		});
+	});
 }
 
 function testEstimatorExistingEntryShouldUpdateAndDefer(callback)
@@ -377,26 +369,25 @@ function testEstimatorExistingEntryShouldUpdateAndDefer(callback)
             });
         }
     };
-    packagesCollection = {
-        findOne: function(query, internalCallback) {
-            testing.assertEquals(query.name, existingEntry.name, 'wrong name passed to findOne', callback);
-            return internalCallback(null, {
-                name: query.name,
-                created: moment(now).subtract(12, 'months').format(),
-                nextUpdate: moment(now).subtract(1, 'second').format(),
-                timesUpdated: 12
-            });
-        }
-    };
-    var theEstimator = getEstimator(existingEntry);
-    theEstimator(function(error, estimation) {
-        testing.check(error, callback);
-        testing.assertEquals(estimation.name, existingEntry.name, 'wrong name returned by the estimator', callback);
-        testing.check(estimation.created, 'created should be deleted in existing entries', callback);
-        testing.assertEquals(moment(estimation.nextUpdate).diff(now, 'years'), 1, 'wrong nextUpdate returned by the estimator', callback);
-        testing.assertEquals(estimation.timesUpdated, 13, 'wrong timesUpdated returned by the estimator', callback);
-        testing.success(callback);
-    });
+	var object = {
+		name: existingEntry.name,
+		created: moment(now).subtract(12, 'months').format(),
+		nextUpdate: moment(now).subtract(1, 'second').format(),
+		timesUpdated: 12,
+	};
+	packages.updatePackage(object, function(error)
+	{
+		testing.check(error, 'Could not update package', callback);
+		var theEstimator = getEstimator(existingEntry);
+		theEstimator(function(error, estimation) {
+			testing.check(error, callback);
+			testing.assertEquals(estimation.name, existingEntry.name, 'wrong name returned by the estimator', callback);
+			testing.check(estimation.created, 'created should be deleted in existing entries', callback);
+			testing.assertEquals(moment(estimation.nextUpdate).diff(now, 'years'), 1, 'wrong nextUpdate returned by the estimator', callback);
+			testing.assertEquals(estimation.timesUpdated, 13, 'wrong timesUpdated returned by the estimator', callback);
+			testing.success(callback);
+		});
+	});
 }
 
 function testEstimatorExistingEntryShouldNotUpdate(callback)
@@ -409,20 +400,19 @@ function testEstimatorExistingEntryShouldNotUpdate(callback)
             testing.check(true, 'estimate should never be called', callback);
         }
     };
-    packagesCollection = {
-        findOne: function(query, internalCallback) {
-            testing.assertEquals(query.name, existingEntry.name, 'wrong name passed to findOne', callback);
-            return internalCallback(null, {
-                name: query.name,
-                nextUpdate: moment(now).add(1, 'second').format(),
-            });
-        }
-    };
-    var theEstimator = getEstimator(existingEntry);
-    theEstimator(function(error) {
-        testing.check(error, callback);
-        testing.success(callback);
-    });
+	var object = {
+		name: existingEntry.name,
+		nextUpdate: moment(now).add(1, 'second').format(),
+	};
+	packages.updatePackage(object, function(error)
+	{
+		testing.check(error, 'Could not update package', callback);
+		var theEstimator = getEstimator(existingEntry);
+		theEstimator(function(error) {
+			testing.check(error, callback);
+			testing.success(callback);
+		});
+	});
 }
 
 function testChunkProcessorUndefinedEstimation(callback)
@@ -438,6 +428,11 @@ function testChunkProcessorUndefinedEstimation(callback)
     });
 }
 
+function testClose(callback)
+{
+	packages.close(callback);
+}
+
 /**
  * Run all tests.
  */
@@ -448,57 +443,48 @@ exports.test = function(callback)
         testEstimatorExistingEntryShouldUpdate,
         testEstimatorExistingEntryShouldUpdateAndDefer,
         testEstimatorExistingEntryShouldNotUpdate,
-        testChunkProcessorUndefinedEstimation
-    ], function() {
-        db.close(function(error) {
-            callback(error);
-        });
-    });
+        testChunkProcessorUndefinedEstimation,
+		testClose,
+    ], callback);
 };
 
 // run script if invoked directly
 if (__filename == process.argv[1])
 {
-    var offset = process.argv[2] || 0;
-    var all;
-    // read all.json and apply offset
-    log.info('loading all.json...');
-    try
-    {
-        all = require('../all.json');
-        delete all._updated;
-    }
-    catch(exception)
-    {
-        log.error('Could not parse all.json: ' + exception);
-        process.exit(1);
-    }
-    log.info('all.json loaded');
-    var names = Object.keys(all);
-    log.info('All packages: ' + names.length);
-    if (offset)
-    {
-        log.info('Offset ' + offset);
-        for (var i=0; i<offset; i++)
-        {
-            delete all[names.shift()];
-        }
-    }
-    log.info('All packages after offset: ' + names.length);
-    exports.goOver(all, function(error, result)
-    {
-        if (error)
-        {
-            log.error('Could not evaluate all: %s', error);
-            return db.close(function () {
-                log.info('DB closed');
-                process.exit(1);
-            });
-        }
-        log.info('Processed ' + result + ' chunks of approx ' + limit + ' elements each.');
-        db.close(function () {
-            log.info('DB closed');
-            process.exit(0);
-        });
-    });
+	var offset = process.argv[2] || 0;
+	var all;
+	// read all.json and apply offset
+	log.info('loading all.json...');
+	try
+	{
+		all = require('../all.json');
+		delete all._updated;
+	}
+	catch(exception)
+	{
+		log.error('Could not parse all.json: ' + exception);
+		process.exit(1);
+	}
+	log.info('all.json loaded');
+	var names = Object.keys(all);
+	log.info('All packages: ' + names.length);
+	if (offset)
+	{
+		log.info('Offset ' + offset);
+		for (var i=0; i<offset; i++)
+		{
+			delete all[names.shift()];
+		}
+	}
+	log.info('All packages after offset: ' + names.length);
+	exports.goOver(all, function(error, result)
+	{
+		if (error)
+		{
+			log.error('Could not evaluate all: %s', error);
+			process.exit(1);
+		}
+		log.info('Processed ' + result + ' chunks of approx ' + limit + ' elements each.');
+		process.exit(0);
+	});
 }
