@@ -7,6 +7,7 @@
  */
 
 // requires
+require('prototypes');
 var path = require('path');
 var config = require('../config.js');
 var express = require('express');
@@ -34,6 +35,7 @@ exports.startServer = function(port, callback) {
 	app.get('/package/:package', serve);
 	app.get('/packages', servePackagesList);
     app.get('/badge/:package', serveBadge);
+    app.get('/shield/:package', serveShield);
 	// connect to database
 	db.addCallback(function(error, result) {
 		if (error) {
