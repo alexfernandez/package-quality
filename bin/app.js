@@ -11,13 +11,12 @@ require('prototypes');
 var path = require('path');
 var config = require('../config.js');
 var express = require('express');
-var db = require('../lib/db.js');
 var badges = require('../lib/badges.js');
+var packages = require('../lib/packages.js');
 var Log = require('log');
 
 // globals
 var log = new Log(config.logLevel);
-var packagesCollection;
 var server;
 
 exports.startServer = function(port, callback) {
@@ -36,15 +35,8 @@ exports.startServer = function(port, callback) {
 	app.get('/packages', servePackagesList);
     app.get('/badge/:package', serveBadge);
     app.get('/shield/:package', serveShield);
-	// connect to database
-	db.addCallback(function(error, result) {
-		if (error) {
-            return callback(error);
-        }
-		packagesCollection = result.collection(config.packagesCollection);
-		// serve
-		server = app.listen(port, callback);
-	});
+	// serve
+	server = app.listen(port, callback);
 };
 
 exports.stopServer = function(callback) {
@@ -60,7 +52,7 @@ exports.stopServer = function(callback) {
 
 function serveBadge (request, response) {
 	var packageName = request.params['package'].replace(/.png$/, '');
-	packagesCollection.findOne({name: packageName}, function(error, result) {
+	packages.findPackage(packageName, function(error, result) {
 		if (error) {
 			return response.status(503).send({error: 'database not available'});
 		}
@@ -76,7 +68,7 @@ function serveBadge (request, response) {
 
 function serveShield(request, response) {
 	var packageName = request.params['package'].substringUpTo('.');
-	packagesCollection.findOne({name: packageName}, function(error, result) {
+	packages.findPackage(packageName, function(error, result) {
 		if (error)
 		{
 			return response.status(503).send({error: 'database not available'});
@@ -92,7 +84,7 @@ function serveShield(request, response) {
 }
 
 function servePackagesList (request, response) {
-	packagesCollection.find({}, {name: true}).toArray(function(error, result) {
+	packages.listAll(function(error, result) {
 		if (error) {
 			return response.status(503).send({error: 'database not available'});
 		}
@@ -105,7 +97,7 @@ function servePackagesList (request, response) {
 
 function serve (request, response) {
 	var npmPackage = request.params.package;
-	packagesCollection.findOne({name: npmPackage}, function(error, result) {
+	packages.findPackage(npmPackage, function(error, result) {
 		if (error) {
 			return response.status(503).send({error: 'database not available'});
 		}
