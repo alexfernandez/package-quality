@@ -111,7 +111,7 @@ function serve (request, response) {
 		packagesCollection.findOne({name: entry.name}, function(error, dbRecord) {
 			if (error || !dbRecord) {
 				// not found, add it to the update collection and go to next step
-				updateCollection.update({name: entry.name}, {'$set':entry}, {upsert: true});
+				updateCollection.update({name: entry.name}, {'$set':entry}, {upsert: true}, function() {});
 				return callback(null, entry, dbRecord, /*stop?*/ false);
 			}
 			// package found, check if expired
@@ -136,7 +136,7 @@ function serve (request, response) {
         {
             if (error) {
             	// at least one factor returned an error. Add entry to the updateCollection
-            	updateCollection.update({name: entry.name}, {'$set':entry}, {upsert: true});
+            	updateCollection.update({name: entry.name}, {'$set':entry}, {upsert: true}, function() {});
                 // return result if it exists, the error otherwise
                 if (result) {
                 	return callback(null, entry, result, /*stop*/ true);
