@@ -59,9 +59,11 @@ exports.stopServer = function(callback) {
 function serveBadge (request, response) {
 	var packageName = request.params['package'].replace(/.png$/, '');
 	packagesCollection.findOne({name: packageName}, function(error, result) {
-		if (error || !result) {
-			delete result._id;
-			return response.status(403).send({error: 'package ' + packageName + ' not found.'});
+		if (error) {
+			return response.status(503).send({error: 'database not available'});
+		}
+		if (!result) {
+			return response.status(403).send({error: 'package ' + packageName + ' not found'});
 		}
 		badges.compileBadge(packageName, (result.quality * 100).toFixed(2), function (err, png) {
 			response.setHeader('Content-type', 'image/png');
@@ -70,11 +72,27 @@ function serveBadge (request, response) {
 	});
 }
 
+function serveShield(request, response) {
+	var packageName = request.params['package'].substringUpTo('.');
+	packagesCollection.findOne({name: packageName}, function(error, result) {
+		if (error)
+		{
+			return response.status(503).send({error: 'database not available'});
+		}
+		if (!result) {
+			return response.status(403).send({error: 'package ' + packageName + ' not found'});
+		}
+		badges.compileShield(packageName, (result.quality * 100).toFixed(2), function (err, svg) {
+			response.setHeader('Content-type', 'image/svg');
+			response.send(svg);
+		});
+	});
+}
+
 function servePackagesList (request, response) {
 	packagesCollection.find({}, {name: true}).toArray(function(error, result) {
 		if (error) {
-			response.send(500);
-			return;
+			return response.status(503).send({error: 'database not available'});
 		}
 		var packages = (result || []).map(function (pkg) {
 			return pkg.name;
@@ -86,8 +104,10 @@ function servePackagesList (request, response) {
 function serve (request, response) {
 	var npmPackage = request.params.package;
 	packagesCollection.findOne({name: npmPackage}, function(error, result) {
-		if (error || !result) {
-			delete result._id;
+		if (error) {
+			return response.status(503).send({error: 'database not available'});
+		}
+		if (!result) {
 			return response.status(403).send({error: 'package ' + npmPackage + ' not found.'});
 		}
 		return response.jsonp(result);
