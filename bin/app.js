@@ -76,8 +76,10 @@ function serveShield(request, response) {
 		if (!result) {
 			return response.status(403).send({error: 'package ' + packageName + ' not found'});
 		}
-		badges.compileShield(packageName, (result.quality * 100).toFixed(2), function (err, svg) {
-			response.setHeader('Content-type', 'image/svg');
+		var queryString = request.url.substringFrom('?');
+		var score = Math.round((result.quality || 0) * 100) / 100;
+		badges.retrieveShield(packageName, score, queryString, function (err, svg) {
+			response.setHeader('Content-type', 'image/svg+xml');
 			response.send(svg);
 		});
 	});
