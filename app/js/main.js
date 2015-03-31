@@ -73,6 +73,20 @@ app.filter('timeAgo', function () {
 });
 
 /**
+ * Directive for auto selecting text in input fields
+ **/
+app.directive('selectOnClick', function () {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+            element.on('click', function () {
+                this.select();
+            });
+        }
+    };
+});
+
+/**
  * Main controller
  * This handles GUI components for packages search
  **/
@@ -165,6 +179,10 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	/**
 	 * URLs
 	 **/
+	// TODO: this should be a property on the package
+	$scope.siteUrl = function (pkg) {
+		return 'http://packagequality.com/#?package=' + pkg.name;
+	};
 	$scope.packageUrl = function (pkg) {
 		if (pkg.source !== 'npm') {
 			return false;
@@ -176,10 +194,29 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	/**
 	 * Badges
 	 **/
+	// TODO: this should probably be generated on the backend and passed down as a property
 	$scope.genBadgeUrl = function (pkg) {
-		return 'http://' + pkg.source + '.packagequality.com/badge/' + pkg.name + '.png';
+		return ['http://', pkg.source, '.packagequality.com/badge/', pkg.name, '.png'].join('');
 	};
-	$scope.genBadgeMarkup = function (pkg) {
-		return '<img src="' + $scope.genBadgeUrl(pkg) + '"/>';
-	};
+	$scope.shareFormats = [
+		{
+			title: 'Image',
+			markup: $scope.genBadgeUrl
+		}, {
+			title: 'HTML',
+			markup: function (pkg) {
+				return ['<img src="', $scope.genBadgeUrl(pkg), '"/>'].join('');
+			}
+		}, {
+			title: 'Markdown',
+			markup: function (pkg) {
+				return ['[![Package Quality](', $scope.genBadgeUrl(pkg), ')](', $scope.siteUrl(pkg), ')'].join('');
+			}
+		}, {
+			title: 'Textile',
+			markup: function (pkg) {
+				return ['!', $scope.genBadgeUrl(pkg), '!:', $scope.siteUrl(pkg)].join('');
+			}
+		}
+	];
 }]);
