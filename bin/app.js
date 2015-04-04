@@ -12,6 +12,9 @@ var path = require('path');
 var config = require('../config.js');
 var express = require('express');
 var badges = require('../lib/badges.js');
+var estimator = require('../lib/estimation.js');
+var async = require('async');
+var moment = require('moment');
 var packages = require('../lib/packages.js');
 var Log = require('log');
 
@@ -105,13 +108,75 @@ function servePackagesList (request, response) {
 
 function serve (request, response) {
 	var npmPackage = request.params.package;
-	packages.find(npmPackage, function(error, result) {
+	var mainStream = [];
+	// look for the package in the registry
+	mainStream.push(function (callback) {
+		packages.findInNpmRegistry(npmPackage, function (error, result) {
+			if (error) {
+				return callback(error);
+			}
+			if (!result) {
+				return callback('package ' + npmPackage + ' not found.');
+			}
+			return callback(null, result);
+		});
+	});
+	// find the package in mongo
+	mainStream.push(function (entry, callback) {
+		packages.find(entry.name, function(error, dbRecord) {
+			if (error || !dbRecord) {
+				// not found, add it to the update collection and go to next step
+				packages.updatePending(entry, function() {});
+				return callback(null, entry, dbRecord, /*stop?*/ false);
+			}
+			// package found, check if expired
+			var now = moment();
+			var lastUpdated = moment(dbRecord.lastUpdated);
+			if (now.diff(lastUpdated, 'seconds') > config.packageExpiration) {
+				// expired, try to refresh
+				return callback(null, entry, dbRecord, /*stop?*/ false);
+			}
+			// not expired, return result
+			return callback(null, entry, dbRecord, /*stop?*/ true);
+		});
+	});
+	// estimate quality or return
+	mainStream.push(function (entry, result, stop, callback) {
+		// stop?
+		if (stop) {
+			return callback(null, entry, result, stop);
+		}
+		// estimate
+		estimator.estimate(entry, function(error, estimation)
+        {
+            if (error) {
+            	// at least one factor returned an error. Add entry to the updateCollection
+            	packages.updatePending(entry, function() {});
+                // return result if it exists, the error otherwise
+                if (result) {
+                	return callback(null, entry, result, /*stop*/ true);
+                }
+                return callback(error);
+            }
+            // remove non-factor fields
+            delete estimation.created;
+            delete estimation.githubApiRemainingCalls;
+            delete estimation.githubApiResetLimit;
+            delete estimation.lastUpdated;
+            delete estimation.name;
+            delete estimation.nextUpdate;
+            delete estimation.source;
+            delete estimation.timesUpdated;
+            
+            return callback(null, entry, estimator.addQuality(estimation));
+        });
+	});
+	// run mainStream
+	async.waterfall(mainStream, function(error, entry, result) {
 		if (error) {
-			return response.status(503).send({error: 'database not available'});
+			return response.status(403).send({error: error});
 		}
-		if (!result) {
-			return response.status(403).send({error: 'package ' + npmPackage + ' not found.'});
-		}
+		delete result._id;
 		return response.jsonp(result);
 	});
 }
