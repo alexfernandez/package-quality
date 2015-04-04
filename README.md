@@ -8,9 +8,10 @@ Measurements of quality for packages, [initially for npm](http://npm.packagequal
 
 ## Add Your Badge
 
-To show the quality of your npm package, just add this image to your GitHub README:
+To show the quality of your npm package, just add one of these images to your GitHub README:
 
 ```
+[![Package quality](http://packagequality.com/shield/yourpackage.svg)](http://packagequality.com/#?package=yourpackage)
 [![Package quality](http://packagequality.com/badge/yourpackage.png)](http://packagequality.com/#?package=yourpackage)
 ```
 
@@ -18,9 +19,11 @@ Or, in HTML markup:
 
 ```
 <a href="http://packagequality.com/#?package=yourpackage"><img src="http://packagequality.com/badge/yourpackage.png"/></a>
+<a href="http://packagequality.com/#?package=yourpackage"><img src="http://packagequality.com/shield/yourpackage.svg"/></a>
 ```
 
 replacing `yourpackage` with (surprise!) the name of your package.
+You can choose between badge or mini-badge (the latter is courtesy of shields.io).
 
 ## Measuring Quality
 
