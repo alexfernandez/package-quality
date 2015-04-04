@@ -1,5 +1,5 @@
 [![Package quality](http://packagequality.com/shield/package-quality.svg)](http://packagequality.com/#?package=package-quality)
-[![Build Status](https://secure.travis-ci.org/alexfernandez/loadtest.svg)](http://travis-ci.org/alexfernandez/loadtest)
+[![Build Status](https://secure.travis-ci.org/alexfernandez/package-quality.svg)](http://travis-ci.org/alexfernandez/package-quality)
 
 [![Package quality](http://packagequality.com/badge/package-quality.png)](http://packagequality.com/#?package=package-quality)
 
