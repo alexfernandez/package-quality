@@ -15,7 +15,7 @@ var log = new Log(exports.logLevel);
 exports.limit = 100;
 exports.expressPort = 8080;
 exports.packagesCollection = 'packages';
-exports.updateCollection = 'update';
+exports.pendingCollection = 'pending';
 exports.mongoConnection = 'mongodb://localhost/quality?autoReconnect=true&connectTimeoutMS=5000';
 exports.testMongoConnection = 'mongodb://localhost/qualitytest?autoReconnect=true&connectTimeoutMS=5000';
 exports.githubToken = '';
