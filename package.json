@@ -1,6 +1,6 @@
 {
 	"name": "package-quality",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"description": "Estimate the quality of a package.",
 	"homepage": "https://github.com/alexfernandez/package-quality",
 	"contributors": ["Alex Fernández <alexfernandeznpm@gmail.com>", "Sergio García Mondaray <sgmonda@gmail.com>", "Diego Lafuente <tufosa@gmail.com>"],
@@ -21,6 +21,7 @@
 		"express": "*",
 		"grunt": "*",
 		"canvas": "*",
+		"basic-request": "*",
     	"grunt-contrib-jshint": "*"
 	},
 	"keywords" : ["package", "quality", "measurement", "package quality", "estimation", "npm", "registry", "npm registry"],
@@ -32,7 +33,8 @@
 	},
 	"preferGlobal": true,
 	"scripts": {
-		"test": "node test.js"
+		"test": "node test.js",
+		"start": "node bin/app.js"
 	},
 	"private": false
 }

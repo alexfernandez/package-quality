@@ -20,9 +20,9 @@ exports.test = function(callback)
 {
 	log.debug('Running tests');
 	var tests = {};
-	var libs = ['estimation', 'db'];
+	var libs = ['estimation', 'db', 'badges', 'packages', 'update'];
     var factors = ['issues', 'versions', 'downloads'];
-    var bin = ['all', 'update'];
+    var bin = ['all'];
 	libs.forEach(function(lib)
 	{
 		tests[lib] = require('./lib/' + lib + '.js').test;

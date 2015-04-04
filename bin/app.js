@@ -7,16 +7,16 @@
  */
 
 // requires
+require('prototypes');
 var path = require('path');
 var config = require('../config.js');
 var express = require('express');
-var db = require('../lib/db.js');
 var badges = require('../lib/badges.js');
+var packages = require('../lib/packages.js');
 var Log = require('log');
 
 // globals
 var log = new Log(config.logLevel);
-var packagesCollection;
 var server;
 
 exports.startServer = function(port, callback) {
@@ -34,15 +34,9 @@ exports.startServer = function(port, callback) {
 	app.get('/package/:package', serve);
 	app.get('/packages', servePackagesList);
     app.get('/badge/:package', serveBadge);
-	// connect to database
-	db.addCallback(function(error, result) {
-		if (error) {
-            return callback(error);
-        }
-		packagesCollection = result.collection(config.packagesCollection);
-		// serve
-		server = app.listen(port, callback);
-	});
+    app.get('/shield/:package', serveShield);
+	// serve
+	server = app.listen(port, callback);
 };
 
 exports.stopServer = function(callback) {
@@ -58,23 +52,49 @@ exports.stopServer = function(callback) {
 
 function serveBadge (request, response) {
 	var packageName = request.params['package'].replace(/.png$/, '');
-	packagesCollection.findOne({name: packageName}, function(error, result) {
-		if (error || !result) {
-			delete result._id;
-			return response.status(403).send({error: 'package ' + packageName + ' not found.'});
+	packages.find(packageName, function(error, result) {
+		if (error) {
+			return response.status(503).send({error: 'database not available'});
 		}
-		badges.compileBadge(packageName, (result.quality * 100).toFixed(2), function (err, png) {
+		if (!result) {
+			return response.status(403).send({error: 'package ' + packageName + ' not found'});
+		}
+		badges.compileBadge(packageName, (result.quality * 100).toFixed(2), function (error, png) {
+			if (error) {
+				return response.status(503).send({error: 'database not available'});
+			}
 			response.setHeader('Content-type', 'image/png');
 			response.send(png);
 		});
 	});
 }
 
+function serveShield(request, response) {
+	var packageName = request.params['package'].substringUpTo('.');
+	packages.find(packageName, function(error, result) {
+		if (error)
+		{
+			return response.status(503).send({error: 'database not available'});
+		}
+		if (!result) {
+			return response.status(403).send({error: 'package ' + packageName + ' not found'});
+		}
+		var queryString = request.url.substringFrom('?');
+		var score = Math.round((result.quality || 0) * 100) / 100;
+		badges.retrieveShield(packageName, score, queryString, function (error, svg) {
+			if (error) {
+				return response.status(503).send({error: 'database not available'});
+			}
+			response.setHeader('Content-type', 'image/svg+xml');
+			response.send(svg);
+		});
+	});
+}
+
 function servePackagesList (request, response) {
-	packagesCollection.find({}, {name: true}).toArray(function(error, result) {
+	packages.listAll(function(error, result) {
 		if (error) {
-			response.send(500);
-			return;
+			return response.status(503).send({error: 'database not available'});
 		}
 		var packages = (result || []).map(function (pkg) {
 			return pkg.name;
@@ -85,9 +105,11 @@ function servePackagesList (request, response) {
 
 function serve (request, response) {
 	var npmPackage = request.params.package;
-	packagesCollection.findOne({name: npmPackage}, function(error, result) {
-		if (error || !result) {
-			delete result._id;
+	packages.find(npmPackage, function(error, result) {
+		if (error) {
+			return response.status(503).send({error: 'database not available'});
+		}
+		if (!result) {
 			return response.status(403).send({error: 'package ' + npmPackage + ' not found.'});
 		}
 		return response.jsonp(result);
