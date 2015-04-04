@@ -1,0 +1,12 @@
+language: node_js
+
+# test on current node.js versions
+node_js:
+  - 0.10
+  - 0.12
+
+# configure notifications (email, IRC, campfire etc)
+# please update this section to your needs!
+#notifications:
+#  irc: "irc.freenode.org#travis"
+
