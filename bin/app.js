@@ -59,7 +59,10 @@ function serveBadge (request, response) {
 		if (!result) {
 			return response.status(403).send({error: 'package ' + packageName + ' not found'});
 		}
-		badges.compileBadge(packageName, (result.quality * 100).toFixed(2), function (err, png) {
+		badges.compileBadge(packageName, (result.quality * 100).toFixed(2), function (error, png) {
+			if (error) {
+				return response.status(503).send({error: 'database not available'});
+			}
 			response.setHeader('Content-type', 'image/png');
 			response.send(png);
 		});
@@ -78,7 +81,10 @@ function serveShield(request, response) {
 		}
 		var queryString = request.url.substringFrom('?');
 		var score = Math.round((result.quality || 0) * 100) / 100;
-		badges.retrieveShield(packageName, score, queryString, function (err, svg) {
+		badges.retrieveShield(packageName, score, queryString, function (error, svg) {
+			if (error) {
+				return response.status(503).send({error: 'database not available'});
+			}
 			response.setHeader('Content-type', 'image/svg+xml');
 			response.send(svg);
 		});
