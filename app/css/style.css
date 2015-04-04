@@ -1,0 +1,20 @@
+.package-share img {
+  display:block;
+  margin:auto;
+}
+
+.package-share input {
+  display: block;
+  width: 100%;
+  margin: 0 0 15px;
+  padding: 8px;
+  font-family: Menlo, Monaco, Courier, monospace;
+  font-size: 13px;
+  line-height: 1.72222;
+  color: inherit;
+  vertical-align: top;
+  cursor: text;
+  background-color: rgb(255, 255, 255);
+  border: 2px solid rgb(231, 233, 236);
+  border-radius: 6px;
+}
