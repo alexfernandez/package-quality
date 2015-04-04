@@ -1,3 +1,5 @@
+[![Package quality](http://packagequality.com/shield/package-quality.svg)](http://packagequality.com/#?package=package-quality)
+
 [![Package quality](http://packagequality.com/badge/package-quality.png)](http://packagequality.com/#?package=package-quality)
 
 # package-quality

@@ -198,6 +198,9 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	$scope.genBadgeUrl = function (pkg) {
 		return ['http://', pkg.source, '.packagequality.com/badge/', pkg.name, '.png'].join('');
 	};
+	$scope.genShieldUrl = function (pkg) {
+		return ['http://', pkg.source, '.packagequality.com/shield/', pkg.name, '.svg'].join('');
+	};
 	$scope.shareFormats = [
 		{
 			title: 'Image',
@@ -216,6 +219,14 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 			title: 'Textile',
 			markup: function (pkg) {
 				return ['!', $scope.genBadgeUrl(pkg), '!:', $scope.siteUrl(pkg)].join('');
+			}
+		}, {
+			title: 'Shield',
+			markup: $scope.genShieldUrl
+		}, {
+			title: 'Shield markdown',
+			markup: function (pkg) {
+				return ['[![Package Quality](', $scope.genShieldUrl(pkg), ')](', $scope.siteUrl(pkg), ')'].join('');
 			}
 		}
 	];
