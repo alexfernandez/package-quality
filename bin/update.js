@@ -18,33 +18,7 @@ var log = new Log(config.logLevel);
 
 function update()
 {
-	var offset = process.argv[2] || 0;
-	var all;
-	// read all.json and apply offset
-	log.info('loading all.json...');
-	try
-	{
-		all = require('../all.json');
-		delete all._updated;
-	}
-	catch(exception)
-	{
-		log.error('Could not parse all.json: ' + exception);
-		process.exit(1);
-	}
-	log.info('all.json loaded');
-	var names = Object.keys(all);
-	log.info('All packages: ' + names.length);
-	if (offset)
-	{
-		log.info('Offset ' + offset);
-		for (var i=0; i<offset; i++)
-		{
-			delete all[names.shift()];
-		}
-	}
-	log.info('All packages after offset: ' + names.length);
-	update.goOver(all, function(error, result)
+	update.goOver(function(error, result)
 	{
 		if (error)
 		{
