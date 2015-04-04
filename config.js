@@ -19,6 +19,7 @@ exports.pendingCollection = 'pending';
 exports.mongoConnection = 'mongodb://localhost/quality?autoReconnect=true&connectTimeoutMS=5000';
 exports.testMongoConnection = 'mongodb://localhost/qualitytest?autoReconnect=true&connectTimeoutMS=5000';
 exports.githubToken = '';
+exports.githubApiMaxCallsReachedError = 'MAX_GITHUB_API_CALLS_REACHED';
 
 try {
     var localConfig = require('./local-config.js');
