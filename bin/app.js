@@ -80,7 +80,7 @@ function serveShield(request, response) {
 			return response.status(403).send({error: 'package ' + packageName + ' not found'});
 		}
 		var queryString = request.url.substringFrom('?');
-		var score = Math.round((result.quality || 0) * 100) / 100;
+		var score = Math.round((result.quality || 0) * 100);
 		badges.retrieveShield(packageName, score, queryString, function (error, svg) {
 			if (error) {
 				return response.status(503).send({error: 'database not available'});
