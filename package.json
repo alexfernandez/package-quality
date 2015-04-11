@@ -1,6 +1,6 @@
 {
 	"name": "package-quality",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Estimate the quality of a package.",
 	"homepage": "https://github.com/alexfernandez/package-quality",
 	"contributors": ["Alex Fernández <alexfernandeznpm@gmail.com>", "Sergio García Mondaray <sgmonda@gmail.com>", "Diego Lafuente <tufosa@gmail.com>"],
