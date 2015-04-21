@@ -21,6 +21,7 @@ exports.testMongoConnection = 'mongodb://localhost/qualitytest?autoReconnect=tru
 exports.githubToken = '';
 exports.githubTokenUpdate = '';
 exports.githubApiMaxCallsReachedError = 'MAX_GITHUB_API_CALLS_REACHED';
+exports.packageExpiration = 3600;
 
 try {
     var localConfig = require('./local-config.js');
