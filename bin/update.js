@@ -18,6 +18,8 @@ var log = new Log(config.logLevel);
 
 function update()
 {
+	// set update token for github
+	config.githubToken = config.githubTokenUpdate;
 	update.goOver(function(error, result)
 	{
 		if (error)
