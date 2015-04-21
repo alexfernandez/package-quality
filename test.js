@@ -22,7 +22,6 @@ exports.test = function(callback)
 	var tests = {};
 	var libs = ['estimation', 'db', 'badges', 'packages', 'update'];
     var factors = ['issues', 'versions', 'downloads'];
-    var bin = ['all'];
 	libs.forEach(function(lib)
 	{
 		tests[lib] = require('./lib/' + lib + '.js').test;
@@ -30,10 +29,6 @@ exports.test = function(callback)
     factors.forEach(function(factor)
     {
         tests[factors] = require('./lib/factors/' + factor + '.js').test;
-    });
-    bin.forEach(function(bin)
-    {
-        tests[bin] = require('./bin/' + bin + '.js').test;
     });
 	testing.run(tests, 4200, callback);
 };
