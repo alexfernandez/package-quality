@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * Update only expired packages (those with nextUpdate previous to current date)
+ * Update packages in pending collection
  * (C) 2015 Diego Lafuente.
  */
 
