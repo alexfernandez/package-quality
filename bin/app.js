@@ -125,19 +125,18 @@ function serve (request, response) {
 	mainStream.push(function (entry, callback) {
 		packages.find(entry.name, function(error, dbRecord) {
 			if (error || !dbRecord) {
-				// not found, add it to the update collection and go to next step
-				packages.updatePending(entry, function() {});
+				// not found,  go to next step
 				return callback(null, entry, dbRecord, /*stop?*/ false);
 			}
-			// package found, check if expired
+			// package found, return first
+			callback(null, entry, dbRecord, /*stop?*/ true);
+			// check if expired
 			var now = moment();
 			var lastUpdated = moment(dbRecord.lastUpdated);
 			if (now.diff(lastUpdated, 'seconds') > config.packageExpiration) {
-				// expired, try to refresh
-				return callback(null, entry, dbRecord, /*stop?*/ false);
+				// expired, add to pending
+				packages.updatePending(entry, function() {});
 			}
-			// not expired, return result
-			return callback(null, entry, dbRecord, /*stop?*/ true);
 		});
 	});
 	// estimate quality or return
@@ -150,7 +149,7 @@ function serve (request, response) {
 		estimator.estimate(entry, function(error, estimation)
         {
             if (error) {
-            	// at least one factor returned an error. Add entry to the updateCollection
+            	// at least one factor returned an error. Add entry to the pendingCollection
             	packages.updatePending(entry, function() {});
                 // return result if it exists, the error otherwise
                 if (result) {
@@ -158,26 +157,29 @@ function serve (request, response) {
                 }
                 return callback(error);
             }
-            // remove non-factor fields
-            delete estimation.created;
-            delete estimation.githubApiRemainingCalls;
-            delete estimation.githubApiResetLimit;
-            delete estimation.lastUpdated;
-            delete estimation.name;
-            delete estimation.nextUpdate;
-            delete estimation.source;
-            delete estimation.timesUpdated;
-            
-            return callback(null, entry, estimator.addQuality(estimation));
+            return callback(null, entry, estimator.addQuality(estimation), /*stop?*/ false);
         });
 	});
+	// update database with most recent estimation
+	mainStream.push(function (entry, estimation, stop, callback) {
+		// stop?
+		if (stop) {
+			return callback(null, estimation);
+		}
+		packages.update(estimation, function (error) {
+			if (error) {
+				// something happened while trying to update the packages collection. Add to pending
+				packages.updatePending(entry, function() {});
+			}
+			return callback(null, estimation);
+		});
+	});
 	// run mainStream
-	async.waterfall(mainStream, function(error, entry, result) {
+	async.waterfall(mainStream, function(error, estimation) {
 		if (error) {
 			return response.status(403).send({error: error});
 		}
-		delete result._id;
-		return response.jsonp(result);
+		return response.jsonp(estimation);
 	});
 }
 
