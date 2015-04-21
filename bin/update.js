@@ -16,7 +16,7 @@ var Log = require('log');
 var log = new Log(config.logLevel);
 
 
-function update()
+function updateAll()
 {
 	// set update token for github
 	config.githubToken = config.githubTokenUpdate;
@@ -32,5 +32,5 @@ function update()
 	});
 }
 
-update();
+updateAll();
 
