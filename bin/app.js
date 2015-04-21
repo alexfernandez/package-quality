@@ -113,9 +113,11 @@ function serve (request, response) {
 	mainStream.push(function (callback) {
 		packages.findInNpmRegistry(npmPackage, function (error, result) {
 			if (error) {
+				log.debug('npm registry error', error);
 				return callback(error);
 			}
 			if (!result) {
+				packages.remove(npmPackage, function(){});
 				return callback('package ' + npmPackage + ' not found.');
 			}
 			return callback(null, result);
