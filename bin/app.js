@@ -12,6 +12,9 @@ var path = require('path');
 var config = require('../config.js');
 var express = require('express');
 var badges = require('../lib/badges.js');
+var estimator = require('../lib/estimation.js');
+var async = require('async');
+var moment = require('moment');
 var packages = require('../lib/packages.js');
 var Log = require('log');
 
@@ -105,14 +108,80 @@ function servePackagesList (request, response) {
 
 function serve (request, response) {
 	var npmPackage = request.params.package;
-	packages.find(npmPackage, function(error, result) {
+	var mainStream = [];
+	// look for the package in the registry
+	mainStream.push(function (callback) {
+		packages.findInNpmRegistry(npmPackage, function (error, result) {
+			if (error) {
+				log.debug('npm registry error', error);
+				return callback(error);
+			}
+			if (!result) {
+				packages.remove(npmPackage, function(){});
+				return callback('package ' + npmPackage + ' not found.');
+			}
+			return callback(null, result);
+		});
+	});
+	// find the package in mongo
+	mainStream.push(function (entry, callback) {
+		packages.find(entry.name, function(error, dbRecord) {
+			if (error || !dbRecord) {
+				// not found,  go to next step
+				return callback(null, entry, dbRecord, /*stop?*/ false);
+			}
+			// package found, return first
+			callback(null, entry, dbRecord, /*stop?*/ true);
+			// check if expired
+			var now = moment();
+			var lastUpdated = moment(dbRecord.lastUpdated);
+			if (now.diff(lastUpdated, 'seconds') > config.packageExpiration) {
+				// expired, add to pending
+				packages.updatePending(entry, function() {});
+			}
+		});
+	});
+	// estimate quality or return
+	mainStream.push(function (entry, result, stop, callback) {
+		// stop?
+		if (stop) {
+			return callback(null, entry, result, stop);
+		}
+		// estimate
+		estimator.estimate(entry, function(error, estimation)
+        {
+            if (error) {
+            	// at least one factor returned an error. Add entry to the pendingCollection
+            	packages.updatePending(entry, function() {});
+                // return result if it exists, the error otherwise
+                if (result) {
+                	return callback(null, entry, result, /*stop*/ true);
+                }
+                return callback(error);
+            }
+            return callback(null, entry, estimator.addQuality(estimation), /*stop?*/ false);
+        });
+	});
+	// update database with most recent estimation
+	mainStream.push(function (entry, estimation, stop, callback) {
+		// stop?
+		if (stop) {
+			return callback(null, estimation);
+		}
+		packages.update(estimation, function (error) {
+			if (error) {
+				// something happened while trying to update the packages collection. Add to pending
+				packages.updatePending(entry, function() {});
+			}
+			return callback(null, estimation);
+		});
+	});
+	// run mainStream
+	async.waterfall(mainStream, function(error, estimation) {
 		if (error) {
-			return response.status(503).send({error: 'database not available'});
+			return response.status(403).send({error: error});
 		}
-		if (!result) {
-			return response.status(403).send({error: 'package ' + npmPackage + ' not found.'});
-		}
-		return response.jsonp(result);
+		return response.jsonp(estimation);
 	});
 }
 

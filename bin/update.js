@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * Update only expired packages (those with nextUpdate previous to current date)
+ * Update packages in pending collection
  * (C) 2015 Diego Lafuente.
  */
 
@@ -16,35 +16,11 @@ var Log = require('log');
 var log = new Log(config.logLevel);
 
 
-function update()
+function updateAll()
 {
-	var offset = process.argv[2] || 0;
-	var all;
-	// read all.json and apply offset
-	log.info('loading all.json...');
-	try
-	{
-		all = require('../all.json');
-		delete all._updated;
-	}
-	catch(exception)
-	{
-		log.error('Could not parse all.json: ' + exception);
-		process.exit(1);
-	}
-	log.info('all.json loaded');
-	var names = Object.keys(all);
-	log.info('All packages: ' + names.length);
-	if (offset)
-	{
-		log.info('Offset ' + offset);
-		for (var i=0; i<offset; i++)
-		{
-			delete all[names.shift()];
-		}
-	}
-	log.info('All packages after offset: ' + names.length);
-	update.goOver(all, function(error, result)
+	// set update token for github
+	config.githubToken = config.githubTokenUpdate;
+	update.goOver(function(error, result)
 	{
 		if (error)
 		{
@@ -56,5 +32,5 @@ function update()
 	});
 }
 
-update();
+updateAll();
 
