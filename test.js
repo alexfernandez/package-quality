@@ -28,7 +28,7 @@ exports.test = function(callback)
 	});
     factors.forEach(function(factor)
     {
-        tests[factors] = require('./lib/factors/' + factor + '.js').test;
+        tests[factor] = require('./lib/factors/' + factor + '.js').test;
     });
 	testing.run(tests, 4200, callback);
 };
