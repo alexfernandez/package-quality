@@ -24,7 +24,7 @@ Or, in HTML markup:
 ```
 
 replacing `yourpackage` with (surprise!) the name of your package.
-You can choose between badge or mini-badge (the latter is courtesy of shields.io).
+You can choose between badge or mini-badge; the latter is courtesy of [shields.io](http://shields.io).
 
 ## Measuring Quality
 
