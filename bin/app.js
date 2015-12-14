@@ -73,7 +73,7 @@ function serveBadge (request, response) {
 }
 
 function serveShield(request, response) {
-	var packageName = request.params['package'].substringUpTo('.');
+	var packageName = request.params['package'].substringUpToLast('.');
 	packages.find(packageName, function(error, result) {
 		if (error)
 		{
