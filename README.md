@@ -51,6 +51,10 @@ The overall quality of a package is ```q=v*d*r```.
 
 [![By xkcd](http://imgs.xkcd.com/comics/star_ratings.png)](http://xkcd.com/1098/)
 
+Just joking.
+New packages will always appear with low stars, until they get enough momentum.
+Also, packages that "just work" and get no issues will be underrated by our system.
+
 ### Other Package Managers
 
 Right now the quality is computed only for npm packages.
