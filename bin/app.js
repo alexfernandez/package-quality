@@ -190,10 +190,9 @@ if (__filename == process.argv[1])
 {
 	exports.startServer(function(error)
 	{
-		if (error)
-		{
-			log.error('Could not start server: %s', error);
+		if (error) {
+			return log.error('Could not start server: %s', error);
 		}
+		log.info('Server listening on port %s', config.expressPort);
 	});
 }
-
