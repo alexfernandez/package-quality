@@ -14,7 +14,7 @@ app.factory('packages', ['$http', function ($http) {
 				callback = packageName;
 				packageName = null;
 			}
-			var url = packageName ? '/package/' + packageName : '/packages';
+			var url = packageName ? '/package/' + packageName.replace('/', '%2F') : '/packages';
 			$http.get(url).success(function (result) {
 				callback(null, result);
 			}).error(function (description, status) {
