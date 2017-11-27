@@ -112,7 +112,7 @@ function serve (request, response) {
 	var mainStream = [];
 	// look for the package in the registry
 	mainStream.push(function (callback) {
-		packages.findInNpmRegistry(npmPackage.replace('/', '%2F'), function (error, result) {
+		packages.findInNpmRegistry(npmPackage.replace(/\//g, '%2F'), function (error, result) {
 			if (error) {
 				log.debug('npm registry error', error);
 				return callback(error);
