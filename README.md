@@ -1,30 +1,30 @@
-[![Package quality](http://packagequality.com/shield/package-quality.svg)](http://packagequality.com/#?package=package-quality)
+[![Package quality](https://packagequality.com/shield/package-quality.svg)](https://packagequality.com/#?package=package-quality)
 [![Build Status](https://secure.travis-ci.org/alexfernandez/package-quality.svg)](http://travis-ci.org/alexfernandez/package-quality)
 
-[![Package quality](http://packagequality.com/badge/package-quality.png)](http://packagequality.com/#?package=package-quality)
+[![Package quality](https://packagequality.com/badge/package-quality.png)](https://packagequality.com/#?package=package-quality)
 
 # package-quality
 
-Measurements of quality for packages, [initially for npm](http://npm.packagequality.com/).
+Measurements of quality for packages, [initially for npm](https://npm.packagequality.com/).
 
 ## Add Your Badge
 
 To show the quality of your npm package, just add one of these images to your GitHub README:
 
 ```
-[![Package quality](http://packagequality.com/shield/yourpackage.svg)](http://packagequality.com/#?package=yourpackage)
-[![Package quality](http://packagequality.com/badge/yourpackage.png)](http://packagequality.com/#?package=yourpackage)
+[![Package quality](https://packagequality.com/shield/yourpackage.svg)](https://packagequality.com/#?package=yourpackage)
+[![Package quality](https://packagequality.com/badge/yourpackage.png)](https://packagequality.com/#?package=yourpackage)
 ```
 
 Or, in HTML markup:
 
 ```
-<a href="http://packagequality.com/#?package=yourpackage"><img src="http://packagequality.com/badge/yourpackage.png"/></a>
-<a href="http://packagequality.com/#?package=yourpackage"><img src="http://packagequality.com/shield/yourpackage.svg"/></a>
+<a href="https://packagequality.com/#?package=yourpackage"><img src="https://packagequality.com/badge/yourpackage.png"/></a>
+<a href="https://packagequality.com/#?package=yourpackage"><img src="https://packagequality.com/shield/yourpackage.svg"/></a>
 ```
 
 replacing `yourpackage` with (surprise!) the name of your package.
-You can choose between badge or mini-badge; the latter is courtesy of [shields.io](http://shields.io).
+You can choose between badge or mini-badge; the latter is courtesy of [shields.io](https://shields.io).
 
 ## Measuring Quality
 

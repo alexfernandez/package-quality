@@ -181,7 +181,7 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	 **/
 	// TODO: this should be a property on the package
 	$scope.siteUrl = function (pkg) {
-		return 'http://packagequality.com/#?package=' + pkg.name;
+		return 'https://packagequality.com/#?package=' + pkg.name;
 	};
 	$scope.packageUrl = function (pkg) {
 		if (pkg.source !== 'npm') {
@@ -196,10 +196,10 @@ app.controller('MainController', ['$scope', '$location', 'packages', function($s
 	 **/
 	// TODO: this should probably be generated on the backend and passed down as a property
 	$scope.genBadgeUrl = function (pkg) {
-		return ['http://', pkg.source, '.packagequality.com/badge/', pkg.name, '.png'].join('');
+		return ['https://', pkg.source, '.packagequality.com/badge/', pkg.name, '.png'].join('');
 	};
 	$scope.genShieldUrl = function (pkg) {
-		return ['http://', pkg.source, '.packagequality.com/shield/', pkg.name, '.svg'].join('');
+		return ['https://', pkg.source, '.packagequality.com/shield/', pkg.name, '.svg'].join('');
 	};
 	$scope.shareFormats = [
 		{
