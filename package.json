@@ -1,6 +1,6 @@
 {
 	"name": "package-quality",
-	"version": "0.2.4",
+	"version": "0.3.0",
 	"description": "Estimate the quality of a package.",
 	"homepage": "https://github.com/alexfernandez/package-quality",
 	"contributors": [
@@ -17,16 +17,16 @@
 	"dependencies": {
 		"prototypes": "*",
 		"request": "*",
-		"log": "*",
-		"async": "*",
+		"log": "1.4.0",
+		"async": "2.6.1",
 		"testing": "*",
-		"mongodb": "*",
-		"moment": "*",
-		"express": "*",
-		"grunt": "*",
-		"canvas": "*",
+		"mongodb": "^3.1.12",
+		"moment": "^2.24.0",
+		"express": "^4.16.4",
+		"grunt": "^1.0.3",
+		"canvas": "^2.3.1",
 		"basic-request": "*",
-		"grunt-contrib-jshint": "*"
+		"grunt-contrib-jshint": "^2.0.0"
 	},
 	"keywords": [
 		"package",
