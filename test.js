@@ -20,7 +20,7 @@ exports.test = function(callback)
 {
 	log.debug('Running tests');
 	var tests = {};
-	var libs = ['estimation', 'db', 'badges', 'packages', 'update', 'cache', 'cached-request', 'utils'];
+	var libs = ['estimation', 'badges', 'cache', 'cached-request', 'utils'];
     var factors = ['issues', 'versions', 'downloads'];
 	libs.forEach(function(lib)
 	{
