@@ -28,6 +28,7 @@ build/Release
 node_modules
 
 all.json
+package-lock.json
 *.swp
 connect.sh
 local-config.js
