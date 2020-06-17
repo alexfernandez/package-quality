@@ -55,7 +55,7 @@ exports.stopServer = function(callback) {
 
 function serveBadge (request, response) {
 	var packageName = request.params['package'].replace(/.png$/, '');
-	packages.find(packageName, function(error, result) {
+	findPackage(packageName, function(error, result) {
 		if (error) {
 			return response.status(503).send({error: 'database not available'});
 		}
@@ -75,7 +75,7 @@ function serveBadge (request, response) {
 
 function serveShield(request, response) {
 	var packageName = request.params['package'].substringUpToLast('.');
-	packages.find(packageName, function(error, result) {
+	findPackage(packageName, function(error, result) {
 		if (error)
 		{
 			return response.status(503).send({error: 'database not available'});
@@ -95,6 +95,18 @@ function serveShield(request, response) {
 	});
 }
 
+function findPackage(packageName, callback) {
+	packages.find(packageName, function(error, result) {
+		if (error) {
+			return callback(error)
+		}
+		if (result) {
+			return callback(null, result)
+		}
+		return readPackage(packageName, callback)
+	})
+}
+
 function servePackagesList (request, response) {
 	packages.listAll(function(error, result) {
 		if (error) {
@@ -109,6 +121,15 @@ function servePackagesList (request, response) {
 
 function serve (request, response) {
 	var npmPackage = request.params.package;
+	readPackage(npmPackage, function(error, estimation) {
+		if (error) {
+			return response.status(403).send({error: error});
+		}
+		return response.jsonp(estimation);
+	})
+}
+
+function readPackage(npmPackage, callback) {
 	var mainStream = [];
 	// look for the package in the registry
 	mainStream.push(function (callback) {
@@ -178,12 +199,7 @@ function serve (request, response) {
 		});
 	});
 	// run mainStream
-	async.waterfall(mainStream, function(error, estimation) {
-		if (error) {
-			return response.status(403).send({error: error});
-		}
-		return response.jsonp(estimation);
-	});
+	async.waterfall(mainStream, callback)
 }
 
 // run if invoked directly
