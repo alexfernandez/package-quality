@@ -15,18 +15,19 @@
 		"url": "https://github.com/alexfernandez/package-quality"
 	},
 	"dependencies": {
-		"prototypes": "*",
-		"request": "*",
-		"log": "1.4.0",
 		"async": "2.6.1",
-		"testing": "*",
-		"mongodb": "^3.1.12",
-		"moment": "^2.24.0",
+		"basic-request": "*",
+		"canvas": "^2.6.1",
 		"express": "^4.16.4",
 		"grunt": "^1.0.3",
-		"canvas": "^2.3.1",
-		"basic-request": "*",
-		"grunt-contrib-jshint": "^2.0.0"
+		"grunt-contrib-jshint": "^2.0.0",
+		"honeycomb-beeline": "^2.1.1",
+		"log": "1.4.0",
+		"moment": "^2.24.0",
+		"mongodb": "^2.2.33",
+		"prototypes": "^2.3.5",
+		"request": "*",
+		"testing": "^1.1.0"
 	},
 	"keywords": [
 		"package",
