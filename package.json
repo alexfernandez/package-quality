@@ -24,7 +24,7 @@
 		"honeycomb-beeline": "^2.1.1",
 		"log": "1.4.0",
 		"moment": "^2.24.0",
-		"mongodb": "^2.2.33",
+		"mongodb": "^3.6.1",
 		"prototypes": "^2.3.5",
 		"request": "*",
 		"testing": "^1.1.0"
