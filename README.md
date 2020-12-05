@@ -5,7 +5,7 @@
 
 # package-quality
 
-Measurements of quality for packages, [initially for npm](https://npm.packagequality.com/).
+Measurements of quality for packages, initially for npm.
 
 ## Add Your Badge
 
