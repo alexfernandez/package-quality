@@ -1,6 +1,6 @@
 {
 	"name": "package-quality",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"description": "Estimate the quality of a package.",
 	"homepage": "https://github.com/alexfernandez/package-quality",
 	"contributors": [
