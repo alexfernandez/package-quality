@@ -63,7 +63,11 @@ function serveBadge (request, response) {
 			return response.status(403).send({error: 'package ' + packageName + ' not found'});
 		}
 		var size = parseInt(request.query.size) || 1;
-		badges.compileBadge(packageName, (result.quality * 100).toFixed(2), size, function (error, png) {
+		var quality = (result.quality || 0) * 100
+		if (quality < 0) {
+			quality = 0
+		}
+		badges.compileBadge(packageName, quality.toFixed(2), size, function (error, png) {
 			if (error) {
 				return response.status(503).send({error: 'database not available'});
 			}
