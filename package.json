@@ -15,7 +15,7 @@
 		"url": "https://github.com/alexfernandez/package-quality"
 	},
 	"dependencies": {
-		"async": "2.6.1",
+		"async": "2.6.4",
 		"basic-request": "*",
 		"canvas": "^2.11.2",
 		"express": "^4.16.4",
