@@ -17,7 +17,7 @@
 	"dependencies": {
 		"async": "2.6.1",
 		"basic-request": "*",
-		"canvas": "^2.6.1",
+		"canvas": "^2.11.2",
 		"express": "^4.16.4",
 		"grunt": "^1.0.3",
 		"grunt-contrib-jshint": "^2.0.0",
