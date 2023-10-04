@@ -6,5 +6,5 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 cd $DIR/bin
 
-sudo -u $USER nodejs update.js >> $HOME/log/package-quality-update.log
+sudo -u $USER node update.js >> $HOME/log/package-quality-update.log
 
