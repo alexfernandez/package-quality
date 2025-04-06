@@ -85,7 +85,7 @@
 					<div>
 						Package quality
 						<span class="pull-right">
-							{{ ((package.quality || 0) * 100).toFixed(1) }}
+							{{ ((package.quality || 0) * 100).toFixed(2) }}
 						</span>
 						<div class="progress">
 							<div class="progress-bar" style="width: {{ package.quality * 100}}%;"></div>
@@ -95,7 +95,7 @@
 					<div ng-repeat="metric in metrics">
 						{{ metric.label }}
 						<span class="pull-right">
-							{{ ((package[metric.key][0] || 0) * 100).toFixed(1) }}
+							{{ ((package[metric.key][0] || 0) * 100).toFixed(2) }}
 						</span>
 						<div class="progress">
 							<div class="progress-bar" style="width: {{ package[metric.key][0] * 100}}%;"></div>
